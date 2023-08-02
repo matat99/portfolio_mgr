@@ -75,9 +75,67 @@ for ticker, transactions in transactions_dict.items():
     }
 
 # Print the portfolio dictionary
-for ticker, data in portfolio_dict.items():
-    print(f"{ticker}: {data}")
+# for ticker, data in portfolio_dict.items():
+#     print(f"{ticker}: {data}")
 
 
 
+import pandas as pd
+from pandas.tseries.offsets import BDay
+import yfinance as yf
+
+def get_weekly_performance(tickers_dict):
+    # Create a dictionary to store the performance for each ticker
+    performance_dict = {}
+
+    # Iterate through each ticker
+    for name, ticker in tickers_dict.items():
+        try:
+            # Get the data for the past week
+            data = yf.download(ticker, period='1wk', progress=False)
+            
+            if data.empty:
+                performance_dict[name] = 'No data'
+                continue
+
+            # Get the last available close price
+            close_price = data['Close'][-1]
+
+            # Get the close price from a week ago
+            week_ago_price = data['Close'][0]
+
+            # Calculate the percentage change
+            percentage_change = ((close_price - week_ago_price) / week_ago_price) * 100
+
+            # Store the percentage change in the performance dictionary
+            performance_dict[name] = percentage_change
+
+        except Exception as e:
+            performance_dict[name] = f"Error: {e}"
+
+    return performance_dict
+
+
+# Load the current tickers from the JSON file
+with open('current_tickers.json', 'r') as file:
+    current_tickers_dict = json.load(file)
+
+# Get the weekly performance
+weekly_performance = get_weekly_performance(current_tickers_dict)
+
+# Sort the performance dictionary by performance
+sorted_weekly_performance = dict(sorted(weekly_performance.items(), key=lambda item: item[1], reverse=True))
+
+# Get the top 5 and bottom 5 performers
+sorted_items = list(sorted_weekly_performance.items())
+top_5 = sorted_items[-5:]
+bottom_5 = sorted_items[:5]
+
+with open('weekly_performance.txt','w') as file:
+    for ticker, performance in sorted_weekly_performance.items():
+        file.write(f"{ticker}: {performance}\n")
+# Print the results
+print(f"Full perfoarmance: {sorted_weekly_performance}")
+# print(f"Top 5 performers of the week: {top_5}")
+# print(f"Bottom 5 performers of the week: {bottom_5}")
 
