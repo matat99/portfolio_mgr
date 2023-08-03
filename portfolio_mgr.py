@@ -22,7 +22,7 @@ def download_data(ticker, period='max'):
     except Exception as e:
         return f'Error: {e}'
 
-def process_ticker(ticker_symbol, ticker, operation, start_date=None, end_date=None, full_data=False):
+def process_ticker(name, ticker, operation, start_date=None, end_date=None, full_data=False):
     # Download the max available data
     data = download_data(ticker, period='max')
 
@@ -33,9 +33,9 @@ def process_ticker(ticker_symbol, ticker, operation, start_date=None, end_date=N
     # If full_data is True, pass the entire data to the operation function
     # Otherwise, pass only the data between start_date and end_date
     if full_data:
-        return operation(ticker_symbol, data, start_date, end_date)
+        return operation(name, data, start_date, end_date)
     else:
-        return operation(ticker_symbol, data.loc[start_date:end_date], start_date, end_date)
+        return operation(data.loc[start_date:end_date], start_date, end_date)
 
 
 def get_weekly_performance(tickers_dict, start_date, end_date):
@@ -56,7 +56,7 @@ def get_weekly_performance(tickers_dict, start_date, end_date):
         return round(percentage_change, 2)
         
 
-    performance_dict = {name: process_ticker(ticker, operation, start_date, end_date) for name, ticker in tickers_dict.items()}
+    performance_dict = {name: process_ticker(name, ticker, operation, start_date, end_date) for name, ticker in tickers_dict.items()}
 
 
     return performance_dict
@@ -66,9 +66,9 @@ def get_position_worth(tickers_dict, transactions_dict):
 
     position_worth_dict = {}
 
-    def operation(ticker_symbol, data, start_date=None, end_date=None):
+    def operation(name, data, start_date=None, end_date=None):
 
-        transactions = transactions_dict.get(ticker_symbol, [])
+        transactions = transactions_dict.get(name, [])
 
         # variable to store the total worth
         total_worth = 0.0
@@ -90,7 +90,7 @@ def get_position_worth(tickers_dict, transactions_dict):
 
         return total_worth
 
-    position_worth_dict = {name: process_ticker(ticker, operation, full_data=True) for name, ticker in tickers_dict.items()}
+    position_worth_dict = {name: process_ticker(name, ticker, operation, full_data=True) for name, ticker in tickers_dict.items()}
 
     return position_worth_dict 
 

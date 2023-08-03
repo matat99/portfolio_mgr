@@ -1,15 +1,15 @@
-LLoyds Banking Group: Error: 'function' object has no attribute 'replace'
-BlackRock Inc.: Error: 'function' object has no attribute 'replace'
-Baxter: Error: 'function' object has no attribute 'replace'
-Americold: Error: 'function' object has no attribute 'replace'
-Salesforce: Error: 'function' object has no attribute 'replace'
-Disney: Error: 'function' object has no attribute 'replace'
-Eestee Lauder: Error: 'function' object has no attribute 'replace'
-Easy Jet: Error: 'function' object has no attribute 'replace'
-Games Workshop: Error: 'function' object has no attribute 'replace'
-Granite Reit: Error: 'function' object has no attribute 'replace'
-Infineon Technologies: Error: 'function' object has no attribute 'replace'
-Mercado Libre: Error: 'function' object has no attribute 'replace'
-Next Era Energy: Error: 'function' object has no attribute 'replace'
-Pfizer: Error: 'function' object has no attribute 'replace'
-Total S.A.: Error: 'function' object has no attribute 'replace'
+Infineon Technologies: 6.66%
+Disney: 3.69%
+Mercado Libre: 2.91%
+Games Workshop: 2.11%
+Total S.A.: 1.39%
+Easy Jet: 1.07%
+Salesforce: -0.58%
+Americold: -0.91%
+BlackRock Inc.: -1.47%
+Eestee Lauder: -1.71%
+Granite Reit: -1.99%
+LLoyds Banking Group: -2.18%
+Next Era Energy: -2.96%
+Pfizer: -4.3%
+Baxter: -8.07%
