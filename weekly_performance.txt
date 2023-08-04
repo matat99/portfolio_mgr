@@ -1,15 +1,15 @@
-Infineon Technologies: 6.66%
-Disney: 3.69%
-Mercado Libre: 2.91%
-Games Workshop: 2.11%
-Total S.A.: 1.39%
-Easy Jet: 1.07%
-Salesforce: -0.58%
-Americold: -0.91%
-BlackRock Inc.: -1.47%
-Eestee Lauder: -1.71%
-Granite Reit: -1.99%
-LLoyds Banking Group: -2.18%
-Next Era Energy: -2.96%
-Pfizer: -4.3%
-Baxter: -8.07%
+Americold: 2.32%
+Disney: 1.1%
+Games Workshop: -0.26%
+Mercado Libre: -0.44%
+Eestee Lauder: -0.55%
+Easy Jet: -0.82%
+Infineon Technologies: -1.12%
+BlackRock Inc.: -1.6%
+Next Era Energy: -1.86%
+Salesforce: -2.07%
+Total S.A.: -2.23%
+Pfizer: -2.35%
+Granite Reit: -3.28%
+Baxter: -3.45%
+LLoyds Banking Group: -3.97%

@@ -38,61 +38,65 @@ def process_ticker(name, ticker, operation, start_date=None, end_date=None, full
         return operation(data.loc[start_date:end_date], start_date, end_date)
 
 
-def get_weekly_performance(tickers_dict, start_date, end_date):
+def get_weekly_performance(tickers_dict):
+    performance_dict = {}
+    today = pd.Timestamp.now(tz='UTC').floor('D') - pd.DateOffset(days=1)
+    one_week_ago = today - pd.DateOffset(weeks=1)
+    today_str = today.strftime('%Y-%m-%d')
+    one_week_ago_str = one_week_ago.strftime('%Y-%m-%d')
 
+    for name, ticker in tickers_dict.items():
+        try:
+            data = yf.download(ticker, start=one_week_ago_str, end=today_str, progress=False)
+            
+            if data.empty:
+                performance_dict[name] = 'No data'
+                continue
 
-    def operation(data, start_date, end_date):
-        # Get only the data between start_date and end_date
-        data = data.loc[start_date:end_date]
+            close_price = data['Close'][-1]
+            close_date = data.index[-1]
 
-        # Get the last available close price
-        close_price = data['Close'][-1]
+            week_ago_price = data['Close'][0]
+            week_ago_date = data.index[0]
 
-        # Get the close price from a week ago
-        week_ago_price = data['Close'][0]
+            percentage_change = ((close_price - week_ago_price) / week_ago_price) * 100
+            performance_dict[name] = round(percentage_change, 2)
 
-        percentage_change = ((close_price - week_ago_price) / week_ago_price) * 100
+            print(f"{name} \nWeek Ago Date: {week_ago_date}, Week Ago Price: {week_ago_price}\nClose Date: {close_date}, Close Price: {close_price}\n")
 
-        return round(percentage_change, 2)
-        
-
-    performance_dict = {name: process_ticker(name, ticker, operation, start_date, end_date) for name, ticker in tickers_dict.items()}
-
+        except Exception as e:
+            performance_dict[name] = f"Error: {e}"
 
     return performance_dict
 
 
 def get_position_worth(tickers_dict, transactions_dict):
-
     position_worth_dict = {}
 
-    def operation(name, data, start_date=None, end_date=None):
+    for name, ticker in tickers_dict.items():
+        try:
+            transactions = transactions_dict.get(ticker, [])
+            data = yf.download(ticker, progress=False)
+            total_worth = 0.0
 
-        transactions = transactions_dict.get(name, [])
+            for transaction in transactions:
+                transaction_date = pd.to_datetime(transaction['date'])
+                transaction_amount = transaction['amount']
 
-        # variable to store the total worth
-        total_worth = 0.0
+                transaction_price = data.loc[transaction_date, 'Close']
+                shares_bought = transaction_amount / transaction_price
 
-        for transaction in transactions:
+                close_price = data['Close'][-1]
+                worth = shares_bought * close_price
+                total_worth += worth
 
-            transaction_date = pd.to_datetime(transaction['date'])
-            transaction_amount = transaction['amount']
+            position_worth_dict[name] = total_worth
 
-            transaction_price = data.loc[transaction_date, 'Close']
+        except Exception as e:
+            position_worth_dict[name] = f"Error: {e}"
 
-            shares_bought = transaction_amount / transaction_price
-
-            close_price = data['Close'][-1]
-
-            worth = shares_bought * close_price
-
-            total_worth += worth
-
-        return total_worth
-
-    position_worth_dict = {name: process_ticker(name, ticker, operation, full_data=True) for name, ticker in tickers_dict.items()}
-
-    return position_worth_dict 
+    return position_worth_dict
+ 
 
 def main():
     # Load JSON files
@@ -117,6 +121,13 @@ def main():
     position_worth_dict = get_position_worth(tickers_dict, transactions_dict)
 
     position_worth_dict['Cash'] = 499.06
+
+    errors_dict = {k: v for k, v in position_worth_dict.items() if not isinstance(v, float)}
+    print(errors_dict)
+
+
+    position_worth_dict = {k: v for k, v in position_worth_dict.items() if isinstance(v, float)}
+
 
     labels = position_worth_dict.keys()
     sizes = position_worth_dict.values()
