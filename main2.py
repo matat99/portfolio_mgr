@@ -1,136 +1,105 @@
-# IMPORTANT IMPORTANT for future reference NTT DO COMO: selling it we made 422.27 profit and got 74.35 in dividends
-
-
-import yfinance as yf
-import pandas as pd
+import os
 import json
-from datetime import date,timedelta
-from pandas.tseries.offsets import BDay
+import math
+import pandas as pd
+import yfinance as yf
 import matplotlib.pyplot as plt
+from datetime import datetime
 
-# Load tickers from JSON file
-with open('current_tickers.json', 'r') as file:
-    tickers_dict = json.load(file)
-
-# Load transactions from JSON file
-with open('transactions.json', 'r') as file:
-    transactions_dict = json.load(file)
-
-
-# Create an empty portfolio dictionary 
-portfolio_dict = {}
-
-
-
+def load_dict_from_json(filename):
+    with open(filename, 'r') as file:
+        return json.load(file)
 
 def get_weekly_performance(tickers_dict):
     performance_dict = {}
     today = pd.Timestamp.now(tz='UTC').floor('D') - pd.DateOffset(days=1)
     one_week_ago = today - pd.DateOffset(weeks=1)
-    today_str = today.strftime('%Y-%m-%d')
-    one_week_ago_str = one_week_ago.strftime('%Y-%m-%d')
 
     for name, ticker in tickers_dict.items():
         try:
-            data = yf.download(ticker, start=one_week_ago_str, end=today_str, progress=False)
-            
+            data = yf.download(ticker, start=one_week_ago.strftime('%Y-%m-%d'), end=today.strftime('%Y-%m-%d'), progress=False)
             if data.empty:
                 performance_dict[name] = 'No data'
                 continue
 
-            close_price = data['Close'][-1]
-            close_date = data.index[-1]
-
             week_ago_price = data['Close'][0]
-            week_ago_date = data.index[0]
+            close_price = data['Close'][-1]
+            percentage_change = round(((close_price - week_ago_price) / week_ago_price) * 100, 2)
+            performance_dict[name] = percentage_change
 
-            percentage_change = ((close_price - week_ago_price) / week_ago_price) * 100
-            performance_dict[name] = round(percentage_change, 2)
-
-            print(f"{name} \nWeek Ago Date: {week_ago_date}, Week Ago Price: {week_ago_price}\nClose Date: {close_date}, Close Price: {close_price}\n")
+            print(f"{name} \nWeek Ago Date: {one_week_ago}, Week Ago Price: {week_ago_price}\nClose Date: {today}, Close Price: {close_price}\n")
 
         except Exception as e:
             performance_dict[name] = f"Error: {e}"
-
     return performance_dict
-
-# Load the current tickers from the JSON file
-with open('current_tickers.json', 'r') as file:
-    current_tickers_dict = json.load(file)
-
-# Get the weekly performance
-weekly_performance = get_weekly_performance(current_tickers_dict)
-
-# Sort the performance dictionary by performance
-sorted_weekly_performance = dict(sorted(weekly_performance.items(), key=lambda item: item[1] if isinstance(item[1], float) else -math.inf, reverse=True))
-
-with open('weekly_performance.txt','w') as file:
-    for ticker, performance in sorted_weekly_performance.items():
-        file.write(f"{ticker}: {performance}%\n")
-# Print the results
-# print(f"Full performance: {sorted_weekly_performance}")
-
 
 def get_position_worth(tickers_dict, transactions_dict):
     position_worth_dict = {}
-
     for name, ticker in tickers_dict.items():
         try:
             transactions = transactions_dict.get(ticker, [])
             data = yf.download(ticker, progress=False)
             total_worth = 0.0
-
             for transaction in transactions:
                 transaction_date = pd.to_datetime(transaction['date'])
-                transaction_amount = transaction['amount']
-
-                transaction_price = data.loc[transaction_date, 'Close']
-                shares_bought = transaction_amount / transaction_price
-
-                close_price = data['Close'][-1]
-                worth = shares_bought * close_price
-                total_worth += worth
-
+                shares_bought = transaction['amount'] / data.loc[transaction_date, 'Close']
+                total_worth += shares_bought * data['Close'][-1]
             position_worth_dict[name] = total_worth
-
         except Exception as e:
             position_worth_dict[name] = f"Error: {e}"
-
     return position_worth_dict
 
-# Load the current tickers from the JSON file
-with open('current_tickers.json', 'r') as file:
-    current_tickers_dict = json.load(file)
+def append_dict_to_txt(dict_obj, filename, sort_by_value=True, reverse=True):
+    if sort_by_value:
+        dict_obj = dict(sorted(dict_obj.items(), key=lambda item: item[1] if isinstance(item[1], float) else float('-inf'), reverse=reverse))
+    with open(filename, 'a') as file:
+        for key, value in dict_obj.items():
+            file.write(f"{key}: {value}%\n")
 
-# Load the transactions from the JSON file
-with open('transactions.json', 'r') as file:
-    transactions_dict = json.load(file)
+def plot_portfolio_composition(worth_dict, filename):
+    names = list(worth_dict.keys())
+    worth = list(worth_dict.values())
+    fig, ax = plt.subplots()
+    ax.pie(worth, labels=names, autopct='%1.1f%%')
+    ax.set_title('Portfolio Composition')
+    plt.savefig(filename)
+    plt.close()
 
-# Get the worth of each position
-position_worth = get_position_worth(current_tickers_dict, transactions_dict)
+def create_directory():
+    date_str = datetime.today().strftime('%Y-%m-%d')
+    directory_path = os.path.join(os.getcwd(), date_str)
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+    return directory_path
 
-# Print the results
-for name, worth in position_worth.items():
-    print(f"{name}: {worth}")
+def redirect_print_to_file(filename):
+    original_stdout = sys.stdout
+    sys.stdout = open(filename, 'w')
+    return original_stdout
 
+def restore_print(original_stdout):
+    sys.stdout.close()
+    sys.stdout = original_stdout
 
-# Add the cash position to the position worth dictionary
-position_worth['Cash'] = 499.04
+if __name__ == "__main__":
+    import sys
 
-# Get the names of the positions and their worth
-names = list(position_worth.keys())
-worth = list(position_worth.values())
+    current_tickers_dict = load_dict_from_json('current_tickers.json')
+    transactions_dict = load_dict_from_json('transactions.json')
 
-# Create a pie chart
-fig, ax = plt.subplots()
-ax.pie(worth, labels=names, autopct='%1.1f%%')
+    output_directory = create_directory()
+    output_filename = os.path.join(output_directory, 'overview.txt')
+    original_stdout = redirect_print_to_file(output_filename)
 
-# Add a title
-ax.set_title('Portfolio Composition')
+    weekly_performance = get_weekly_performance(current_tickers_dict)
+    append_dict_to_txt(weekly_performance, output_filename)
 
-plt.savefig('portfolio_Composition.png')
+    position_worth = get_position_worth(current_tickers_dict, transactions_dict)
+    position_worth['Cash'] = 499.04
+    for name, worth in position_worth.items():
+        print(f"\n{name}: {worth}")
 
-# Show the plot
-plt.show()
-
-
+    restore_print(original_stdout)
+    
+    plot_filename = os.path.join(output_directory, 'portfolio_Composition.png')
+    plot_portfolio_composition(position_worth, plot_filename)
