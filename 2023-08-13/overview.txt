@@ -1,0 +1,92 @@
+LLoyds Banking Group 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 43.16999816894531
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 42.95000076293945
+
+BlackRock Inc. 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 712.5499877929688
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 695.6099853515625
+
+Baxter 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 43.540000915527344
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 43.2400016784668
+
+Americold 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 32.369998931884766
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 31.959999084472656
+
+Salesforce 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 216.05999755859375
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 208.6999969482422
+
+Disney 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 86.83000183105469
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 89.0199966430664
+
+Eestee Lauder 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 170.14999389648438
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 167.6300048828125
+
+Easy Jet 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 452.70001220703125
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 447.79998779296875
+
+Games Workshop 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 11240.0
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 11380.0
+
+Granite Reit 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 52.43000030517578
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 50.47999954223633
+
+Infineon Technologies 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 33.52000045776367
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 33.35499954223633
+
+Mercado Libre 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 1358.81005859375
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 1330.0
+
+Next Era Energy 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 68.63999938964844
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 68.91999816894531
+
+Pfizer 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 35.68000030517578
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 36.040000915527344
+
+Total S.A. 
+Week Ago Date: 2023-08-05 00:00:00+00:00, Week Ago Price: 55.15999984741211
+Close Date: 2023-08-12 00:00:00+00:00, Close Price: 57.16999816894531
+
+
+LLoyds Banking Group: 675.4442591892199
+
+BlackRock Inc.: 1022.2407376408629
+
+Baxter: 224.05643392499155
+
+Americold: 229.38078135417226
+
+Salesforce: 833.1605281337652
+
+Disney: 477.53907269414503
+
+Eestee Lauder: 401.0272355192772
+
+Easy Jet: 341.16822431267474
+
+Games Workshop: 682.8
+
+Granite Reit: 549.5056104483233
+
+Infineon Technologies: 939.2722958444492
+
+Mercado Libre: 959.9782039412776
+
+Next Era Energy: 1080.105196500811
+
+Pfizer: 657.2422645390534
+
+Total S.A.: 573.4746656684251
+
+Cash: 499.04
