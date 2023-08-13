@@ -114,6 +114,6 @@ if __name__ == "__main__":
     # Compare portfolio performance to FTSE Developed Index
     comparison_start_date = '2022-09-01'
     comparison_end_date = '2023-08-01'
-    compare_portfolio_to_benchmark(current_tickers_dict, comparison_start_date, comparison_end_date, '^FTSE', 'FTSE Developed Index')
+    compare_portfolio_to_benchmark(current_tickers_dict, transactions_dict, comparison_start_date, comparison_end_date, '^FTSE', 'FTSE Developed Index')
 
             
