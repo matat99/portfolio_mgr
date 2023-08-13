@@ -18,18 +18,24 @@ def get_historical_data(tickers_dict, comparison_start_date, comparison_end_date
 def get_portfolio_value(data_dict, transactions_dict):
     portfolio_value = pd.Series(dtype=float)
     
-    for name, data in data_dict.items():
+    for ticker, data in data_dict.items():
         try:
-            transactions = transactions_dict.get(name, [])
-            total_shares = sum([transaction['amount'] / data.loc[transaction['date']] for transaction in transactions])
+            transactions = transactions_dict.get(ticker, [])
+            total_shares = 0  # Initialize total shares for the ticker
+            for transaction in transactions:
+                if transaction['date'] not in data.index:
+                    print(f"Date {transaction['date']} not found for {ticker}.")
+                    continue
+                total_shares += transaction['amount'] / data.loc[transaction['date']]
             weekly_value = data * total_shares
             if portfolio_value.empty:
                 portfolio_value = weekly_value
             else:
                 portfolio_value = portfolio_value.add(weekly_value, fill_value=0)
         except Exception as e:
-            print(f"Error calculating value for {name}: {e}")
+            print(f"Error calculating value for {ticker}: {e}")
     return portfolio_value
+
 
 def plot_portfolio_vs_benchmark(portfolio_data, benchmark_data, benchmark_name):
     plt.figure(figsize=(12, 6))
