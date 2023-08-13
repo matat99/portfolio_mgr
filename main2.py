@@ -5,6 +5,7 @@ import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
 from datetime import datetime
+from performance_comparison import compare_portfolio_to_benchmark
 
 def load_dict_from_json(filename):
     with open(filename, 'r') as file:
@@ -57,13 +58,19 @@ def append_dict_to_txt(dict_obj, filename, sort_by_value=True, reverse=True):
             file.write(f"{key}: {value}%\n")
 
 def plot_portfolio_composition(worth_dict, filename):
-    names = list(worth_dict.keys())
+    names = list(worth_dict.keys()) 
     worth = list(worth_dict.values())
     fig, ax = plt.subplots()
-    ax.pie(worth, labels=names, autopct='%1.1f%%')
+    wedges, texts, autotexts = ax.pie(worth, labels=names, autopct='%1.1f%%', pctdistance=1.15, textprops={'fontsize': 10})
+    ax.legend(wedges, names,
+          title="Portfolio",
+          loc="center left",
+          bbox_to_anchor=(1, 0, 0.5, 1))
+    plt.setp(autotexts, size=8, weight="bold")
     ax.set_title('Portfolio Composition')
     plt.savefig(filename)
     plt.close()
+
 
 def create_directory():
     date_str = datetime.today().strftime('%Y-%m-%d')
@@ -103,3 +110,10 @@ if __name__ == "__main__":
     
     plot_filename = os.path.join(output_directory, 'portfolio_Composition.png')
     plot_portfolio_composition(position_worth, plot_filename)
+
+    # Compare portfolio performance to FTSE Developed Index
+    comparison_start_date = '2022-09-01'
+    comparison_end_date = '2023-08-01'
+    compare_portfolio_to_benchmark(current_tickers_dict, comparison_start_date, comparison_end_date, '^FTSE', 'FTSE Developed Index')
+
+            
