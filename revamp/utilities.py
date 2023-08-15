@@ -8,6 +8,17 @@ def load_dict_from_json(filename):
     with open(filename, 'r') as file:
         return json.load(file)
 
+import pandas as pd
+
+def save_to_csv(data, name_to_ticker_map, filename='portfolio_values.csv'):
+    # Convert your data from tickers to names
+    data_with_names = {name: data[ticker] for name, ticker in name_to_ticker_map.items() if ticker in data}
+
+    # Convert to DataFrame and save to CSV
+    df = pd.DataFrame(data_with_names.items(), columns=['Company Name', 'Value'])
+    df.to_csv(filename, index=False)
+
+
 def append_dict_to_txt(dict_obj, filename, sort_by_value=True, reverse=True):
     if sort_by_value:
         dict_obj = dict(sorted(dict_obj.items(), key=lambda item: item[1] if isinstance(item[1], float) else float('-inf'), reverse=reverse))
