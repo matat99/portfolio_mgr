@@ -24,7 +24,7 @@ def get_weekly_performance(tickers_dict):
             close_price = data['Close'][-1]
 
             performance_dict[name] = round(((close_price - week_ago_price) / week_ago_price) * 100, 2)
-            print(f"{name} \nWeek Ago Date: {data.index[0]}, Week Ago Price: {week_ago_price}\nClose Date: {data.index[-1]}, Close Price: {close_price}\n")
+            print(f"{name} Week Ago Date: {data.index[0]}, Week Ago Price: {week_ago_price}Close Date: {data.index[-1]}, Close Price: {close_price}")
         except Exception as e:
             performance_dict[name] = f"Error: {e}"
     return performance_dict
@@ -48,7 +48,7 @@ def get_position_worth(tickers_dict, transactions_dict):
 def save_sorted_performance_to_txt(sorted_dict, filename):
     with open(filename,'w') as file:
         for ticker, performance in sorted_dict.items():
-            file.write(f"{ticker}: {performance}%\n")
+            file.write(f"{ticker}: {performance}%")
 
 def plot_portfolio_composition(worth_dict):
     names = list(worth_dict.keys())

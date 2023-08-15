@@ -3,10 +3,10 @@
 from datetime import datetime
 import os
 
-from utilities import load_dict_from_json
+from utilities import load_dict_from_json, save_to_csv
 from data_retrieval import calculate_position_values
 from data_download import get_earliest_transaction_year, download_data_for_tickers
-# from performance_comparison import compare_portfolio_to_benchmark
+
 
 if __name__ == "__main__":
 
@@ -25,6 +25,8 @@ if __name__ == "__main__":
     # Value of our current positions 
 
     value = calculate_position_values(transaction_data, current_tickers, downloaded_data)
+
+    save_to_csv(value, current_tickers)
 
     print(value)
     
