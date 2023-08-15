@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 from utilities import load_dict_from_json, save_to_csv
-from data_retrieval import calculate_position_values
+from data_retrieval import calculate_position_values, weekly_performance
 from data_download import get_earliest_transaction_year, download_data_for_tickers
 
 
@@ -28,5 +28,7 @@ if __name__ == "__main__":
 
     save_to_csv(value, current_tickers)
 
-    print(value)
+    weekly = weekly_performance(downloaded_data, current_tickers)
+
+    print(weekly)
     
