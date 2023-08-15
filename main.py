@@ -74,4 +74,6 @@ if __name__ == "__main__":
     for name, worth in position_worth.items():
         print(f"{name}: {worth}")
 
+    print(f'{sorted_weekly_performance}')
+
     plot_portfolio_composition(position_worth)
