@@ -14,6 +14,9 @@ def save_to_csv(data, name_to_ticker_map, filename='portfolio_values.csv'):
     # Convert your data from tickers to names
     data_with_names = {name: data[ticker] for name, ticker in name_to_ticker_map.items() if ticker in data}
 
+    # Cash Position (Maybe add a more dynamic manipulation of this value but whatever)
+    data_with_names['Cash'] = 499.04
+
     # Convert to DataFrame and save to CSV
     df = pd.DataFrame(data_with_names.items(), columns=['Company Name', 'Value'])
     df.to_csv(filename, index=False)
