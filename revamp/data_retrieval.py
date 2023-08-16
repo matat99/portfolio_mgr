@@ -46,12 +46,6 @@ def calculate_position_values(transactions_dict, current_tickers, downloaded_dat
     return position_values
 
 
-
-
-
-
-
-
 def weekly_performance(data_dict, current_tickers, filename='weekly.csv'):
     """
     Calculate the weekly performance for a list of tickers based on their data.
@@ -99,3 +93,40 @@ def weekly_performance(data_dict, current_tickers, filename='weekly.csv'):
     # saving to csv
     df = pd.DataFrame(sorted_performance.items(), columns=['Company Name', 'Weekly Performance'])
     df.to_csv(filename, index=False)
+
+
+
+def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_map):
+    performance_dict = {}
+
+    for name, ticker in name_to_ticker_map.items():
+        # Extract transactions for the ticker
+        transactions = transactions_dict.get(ticker, [])
+
+        # Get the date of the first transaction for the ticker
+        if not transactions:
+            continue
+        first_transaction_date = pd.to_datetime(transactions[0]['date'])
+
+        # Extract stock data for the ticker
+        data = data_dict.get(ticker)
+
+        # Handle case where data is not available
+        if data is None or first_transaction_date not in data.index:
+            print(f"Data not available for {ticker} on {first_transaction_date}. Skipping...")
+            continue
+
+        # Get close price on purchase date and the most recent close price
+        purchase_price = data.loc[first_transaction_date, 'Close']
+        recent_price = data['Close'].iloc[-1]
+
+        # Calculate percentage change
+        percentage_change = ((recent_price - purchase_price) / purchase_price) * 100
+        performance_dict[name] = round(percentage_change, 2)
+
+    # Convert dictionary to DataFrame and save to CSV
+    df = pd.DataFrame(performance_dict.items(), columns=['Company Name', 'Performance (%)'])
+    df.to_csv('overall_performance.csv', index=False)
+    return df
+
+
