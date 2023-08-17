@@ -161,12 +161,12 @@ def yearly_performance_June2June(transactions_dict, data_dict, name_to_ticker_ma
                 total_shares -= shares_sold
 
         try:
-            recent_price = data['Close'].loc['2023-06-30']
+            recent_price = data['Close'].loc['2023-06-01']
         except:
             recent_price = data['Close'].iloc[-1]
 
         try:
-            one_year_ago_price = data['Close'].loc['2022-06-01']
+            one_year_ago_price = data['Close'].loc['2022-05-31']
         except:
             one_year_ago_price = data['Close'].iloc[0]
 
