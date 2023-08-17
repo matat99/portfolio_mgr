@@ -128,7 +128,63 @@ def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
     return df
 
 
-def yearly_performance(transactions_dict, data_dict, name_to_ticker_map):
+def yearly_performance_June2June(transactions_dict, data_dict, name_to_ticker_map):
+    yearly_performance_dict = {}
+
+    end_value = 0.0
+    start_value = 0.0
+
+    for name, ticker in name_to_ticker_map.items():
+        transactions = transactions_dict.get(ticker, [])
+        if not transactions:
+            continue
+
+        data = data_dict.get(ticker)
+        if data is None:
+            print(f"Data not available for {ticker}. Skipping...")
+            continue
+        
+        # Limit the data to the range from June 2022 to June 2023
+        data = data['2022-06-01':'2023-06-30']
+
+        total_shares = 0.0
+        for transaction in transactions:
+            transaction_date = pd.to_datetime(transaction['date'])
+            if transaction_date not in data.index:
+                continue
+
+            if transaction['amount'] > 0:
+                shares_bought = transaction['amount'] / data.loc[transaction_date, 'Close']
+                total_shares += shares_bought
+            else:
+                shares_sold = -transaction['amount'] / data.loc[transaction_date, 'Close']
+                total_shares -= shares_sold
+
+        try:
+            recent_price = data['Close'].loc['2023-06-30']
+        except:
+            recent_price = data['Close'].iloc[-1]
+
+        try:
+            one_year_ago_price = data['Close'].loc['2022-06-01']
+        except:
+            one_year_ago_price = data['Close'].iloc[0]
+
+        start_value += total_shares * one_year_ago_price
+        end_value += total_shares * recent_price
+
+        stock_yearly_performance = ((recent_price - one_year_ago_price) / one_year_ago_price) * 100
+        yearly_performance_dict[name] = round(stock_yearly_performance, 2)
+
+    portfolio_yearly_performance = ((end_value - start_value) / start_value) * 100
+    yearly_performance_dict['Total Portfolio'] = round(portfolio_yearly_performance, 2)
+
+    df = pd.DataFrame(yearly_performance_dict.items(), columns=['Company Name', 'Yearly Performance (%)'])
+    df.to_csv('yearly_performance_new.csv', index=False)
+    return df
+
+
+def yearly_performance_YoY(transactions_dict, data_dict, name_to_ticker_map):
     yearly_performance_dict = {}
 
     end_value = 0.0
@@ -175,10 +231,6 @@ def yearly_performance(transactions_dict, data_dict, name_to_ticker_map):
     df = pd.DataFrame(yearly_performance_dict.items(), columns=['Company Name', 'Yearly Performance (%)'])
     df.to_csv('yearly_performance.csv', index=False)
     return df
-
-
-
-
 
 
 def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_map, current_portfolio_value):
