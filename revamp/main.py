@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 from utilities import load_dict_from_json, save_to_csv
-from data_retrieval import weekly_performance, calculate_overall_performance, get_eur_exchange_rates, calculate_position_values_with_currency_adjustment, yearly_performance_June2June
+from data_retrieval import weekly_performance, calculate_overall_performance, get_eur_exchange_rates, calculate_position_values_with_currency_adjustment, yearly_performance_June2June, yearly_performance_YoY, monthly_portfolio_performance
 from data_download import get_earliest_transaction_year, download_data_for_tickers
 
 api_key = "42c83d3d0b0e24c532ce1cd511d95724" # They key is hard-coded... I know it's bad practice FUCK YOU 
@@ -33,9 +33,11 @@ if __name__ == "__main__":
 
     weekly = weekly_performance(transaction_data, downloaded_data, current_tickers)
 
-    yearly = yearly_performance_June2June(transaction_data, downloaded_data, current_tickers)
+    yearly = yearly_performance_YoY(transaction_data, downloaded_data, current_tickers)
 
     overall = calculate_overall_performance(transaction_data, downloaded_data, current_tickers, value['Total Portfolio'])
 
-    print(overall)
+    graph = monthly_portfolio_performance(transaction_data, downloaded_data, current_tickers)
+
+    print(graph)
     
