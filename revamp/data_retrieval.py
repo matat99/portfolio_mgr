@@ -273,3 +273,55 @@ def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_m
 
 
 
+
+
+def monthly_portfolio_performance(transactions_dict, data_dict, name_to_ticker_map):
+    monthly_values = {}
+
+    # Extract all the dates from transactions and sort them
+    all_dates = [pd.to_datetime(trans['date']) for ticker_trans in transactions_dict.values() for trans in ticker_trans]
+    start_date = min(all_dates)
+    end_date = pd.to_datetime('2023-07-31') # for annual reports its 2023-06-30
+
+    # Generate a list of month ends between start_date and end_date
+    month_ends = pd.date_range(start_date, end_date, freq='M')
+
+    for month_end in month_ends:
+        monthly_total = 0.0
+
+        for ticker, transactions in transactions_dict.items():
+            total_shares = 0.0
+            data = data_dict.get(ticker)
+            
+            # If the month_end isn't in the data, use the previous available date
+            if month_end not in data.index:
+                available_dates = data.index[data.index <= month_end]
+                if not available_dates.empty:
+                    month_end = available_dates[-1]
+                else:
+                    # If data is missing for that month entirely, skip
+                    continue
+
+            # Calculate the total shares held up to this month_end
+            for transaction in transactions:
+                transaction_date = pd.to_datetime(transaction['date'])
+                if transaction_date > month_end:
+                    break
+                
+                if transaction['amount'] > 0:
+                    shares_bought = transaction['amount'] / data.loc[transaction_date, 'Close']
+                    total_shares += shares_bought
+                else:
+                    shares_sold = -transaction['amount'] / data.loc[transaction_date, 'Close']
+                    total_shares -= shares_sold
+
+            # Now, multiply the shares count at month_end with the close price at month_end
+            monthly_total += total_shares * data.loc[month_end, 'Close']
+
+        monthly_values[month_end] = monthly_total
+
+    # Convert the dictionary to a DataFrame and save to CSV
+    df = pd.DataFrame(monthly_values.items(), columns=['Date', 'Portfolio Value'])
+    df.to_csv('monthly_portfolio_performance.csv', index=False)
+
+    return df
