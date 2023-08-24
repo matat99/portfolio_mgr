@@ -20,7 +20,7 @@ def get_eur_exchange_rates(api_key):
     return data['rates']
 
 
-def calculate_position_values_with_currency_adjustment(transactions_dict, current_tickers, downloaded_data, eur_rates):
+def calculate_position_values_with_currency_adjustment(transactions_dict, current_tickers, downloaded_data):
     position_values = {}
     total_portfolio_value = 0
 
@@ -63,13 +63,13 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
                     shares_sold = -transaction['amount'] / data.loc[transaction_date, 'Close']
                     total_shares -= shares_sold
 
-            current_value_in_stock_currency = total_shares * data['Close'].loc["2023-05-31"] #<- specific cutoff | data['Close'].iloc[-1] <- last close date
+            current_value_in_stock_currency = total_shares * data['Close'].loc["2022-06-01"] #data['Close'].iloc[-1] last close
             
             # Convert to GBP using the EUR as a pivot
             if currency != 'GBP':
-                to_eur_rate = 1 / eur_rates[currency] if currency in eur_rates else 1  # If EUR, this rate will be 1
+                to_eur_rate = 1 / eur_rates.get(currency, 1)
                 current_value_in_eur = current_value_in_stock_currency * to_eur_rate
-                current_value_in_gbp = current_value_in_eur * eur_rates['GBP']
+                current_value_in_gbp = current_value_in_eur * eur_rates.get('GBP', 1)
             else:
                 current_value_in_gbp = current_value_in_stock_currency
 
@@ -81,6 +81,7 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
 
     position_values['Total Portfolio'] = total_portfolio_value
     return position_values
+
 
 
 def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
@@ -294,18 +295,8 @@ def weekly_portfolio_performance_with_currency_adjustment(transactions_data, dow
     all_dates = [pd.to_datetime(trans['date']) for ticker_trans in transactions_data.values() for trans in ticker_trans]
     start_date = min(all_dates)
     end_date = pd.to_datetime('2023-05-31')
-
-    # Generate a list of week ends (Fridays) between start_date and end_date
     week_ends = pd.date_range(start_date, end_date, freq='W-FRI')
-
-    # A dictionary to cache exchange rates at the start of each month
     monthly_exchange_rates = downloaded_fx
-
-    # Check for missing data before main loop
-    for week_end in week_ends:
-        missing_tickers = [ticker for ticker, data in downloaded_data.items() if week_end not in data.index]
-        if missing_tickers:
-            print(f"Missing data for date {week_end} for tickers: {', '.join(missing_tickers)}")
 
     for week_end in week_ends:
         weekly_total = 0.0
@@ -336,7 +327,18 @@ def weekly_portfolio_performance_with_currency_adjustment(transactions_data, dow
                         shares_sold = -transaction['amount'] / data.loc[transaction_date, 'Close']
                         total_shares -= shares_sold
 
-                current_value_in_stock_currency = total_shares * data['Close'].loc[week_end]
+                # If week_end data is missing, get the closest previous date available
+                if week_end not in data.index:
+                    available_dates = data.index
+                    previous_dates = available_dates[available_dates < week_end]
+                    if previous_dates.empty:
+                        print(f"No available previous data for {ticker} on {week_end}")
+                        continue
+                    last_available_date = previous_dates[-1]
+                else:
+                    last_available_date = week_end
+
+                current_value_in_stock_currency = total_shares * data['Close'].loc[last_available_date]
 
                 # Get the currency exchange rate for the current month
                 month_start = week_end.replace(day=1)
@@ -357,7 +359,6 @@ def weekly_portfolio_performance_with_currency_adjustment(transactions_data, dow
 
         weekly_values[week_end] = weekly_total
 
-    # Convert the dictionary to a DataFrame and save to CSV
     df = pd.DataFrame(weekly_values.items(), columns=['Date', 'Portfolio Value'])
     df.to_csv('weekly_portfolio_performance_with_currency_adjustment.csv', index=False)
 
@@ -367,6 +368,101 @@ def weekly_portfolio_performance_with_currency_adjustment(transactions_data, dow
 
 
 
+
+
+
+
+
+
+
+def calculate_adjusted_portfolio_values_as_of_date(transactions_dict, downloaded_data, eur_rates, date=None):
+    position_values = {}
+    total_portfolio_value = 0
+
+    original_date = pd.to_datetime(date)
+
+    if original_date:
+        adjusted_date = original_date.replace(day=1)
+        eur_rates = eur_rates.get(adjusted_date.strftime('%Y-%m-%d'), None)
+
+    currency_mapping = {
+        '': 'USD',
+        '.L': 'GBP',
+        '.DE': 'EUR',
+        '.PA': 'EUR',
+        '.TO': 'CAD',
+        '.F': 'EUR'
+    }
+
+    for ticker, transactions in transactions_dict.items():
+        if not transactions:
+            continue
+
+        total_shares = 0.0
+        fully_sold = False
+
+        try:
+            data = downloaded_data[ticker]
+
+            if original_date:
+                latest_data = data.loc[:original_date]
+
+                # Handle trading holiday or unavailable data for the provided date
+                if latest_data.empty or original_date not in latest_data.index:
+                    latest_data = data.loc[:original_date]
+                    latest_data = latest_data.iloc[-1:] if not latest_data.empty else latest_data
+            else:
+                latest_data = data
+
+            if latest_data.empty:
+                continue
+            
+            latest_close = latest_data['Close'].iloc[-1]
+
+            suffix = ticker.split('.')[-1] if '.' in ticker else ''
+            currency = currency_mapping.get('.' + suffix, 'USD')
+
+            for transaction in transactions:
+                transaction_date = pd.to_datetime(transaction['date'])
+
+                if transaction_date > latest_data.index[-1]:
+                    continue
+
+                if fully_sold:
+                    break
+
+                if transaction_date not in latest_data.index:
+                    continue
+
+                if 'sold' in transaction and transaction['sold'] == True:
+                    fully_sold = True
+
+                if not fully_sold:
+                    if transaction['amount'] > 0:
+                        shares_bought = transaction['amount'] / latest_data.loc[transaction_date, 'Close']
+                        total_shares += shares_bought
+                    else:
+                        shares_sold = -transaction['amount'] / latest_data.loc[transaction_date, 'Close']
+                        total_shares -= shares_sold
+
+            current_value_in_stock_currency = total_shares * latest_close
+
+            if currency != 'GBP':
+                to_eur_rate = 1 / eur_rates.get(currency, 1)
+                current_value_in_eur = current_value_in_stock_currency * to_eur_rate
+                current_value_in_gbp = current_value_in_eur * eur_rates.get('GBP', 1)
+            else:
+                current_value_in_gbp = current_value_in_stock_currency
+
+            if not fully_sold:
+                position_values[ticker] = current_value_in_gbp
+                total_portfolio_value += current_value_in_gbp
+
+        except Exception as e:
+            position_values[ticker] = f"Error: {e}"
+
+    position_values['Total Portfolio'] = total_portfolio_value
+    return position_values
 
 
 
