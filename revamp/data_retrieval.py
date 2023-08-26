@@ -83,7 +83,6 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
     return position_values
 
 
-
 def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
     weekly_performance_dict = {}
 
@@ -365,20 +364,8 @@ def weekly_portfolio_performance_with_currency_adjustment(transactions_data, dow
     return df
 
 
-
-
-
-
-
-
-
-
-
-
-def calculate_adjusted_portfolio_values_as_of_date(transactions_dict, downloaded_data, eur_rates, date=None):
-    position_values = {}
+def calculate_total_portfolio_value_as_of_date(transactions_dict, downloaded_data, eur_rates, date=None):
     total_portfolio_value = 0
-
     original_date = pd.to_datetime(date)
 
     if original_date:
@@ -403,13 +390,10 @@ def calculate_adjusted_portfolio_values_as_of_date(transactions_dict, downloaded
 
         try:
             data = downloaded_data[ticker]
-
+            
             if original_date:
                 latest_data = data.loc[:original_date]
-
-                # Handle trading holiday or unavailable data for the provided date
                 if latest_data.empty or original_date not in latest_data.index:
-                    latest_data = data.loc[:original_date]
                     latest_data = latest_data.iloc[-1:] if not latest_data.empty else latest_data
             else:
                 latest_data = data
@@ -418,21 +402,20 @@ def calculate_adjusted_portfolio_values_as_of_date(transactions_dict, downloaded
                 continue
             
             latest_close = latest_data['Close'].iloc[-1]
-
             suffix = ticker.split('.')[-1] if '.' in ticker else ''
             currency = currency_mapping.get('.' + suffix, 'USD')
 
             for transaction in transactions:
                 transaction_date = pd.to_datetime(transaction['date'])
+                print(type(transaction_date))
 
+
+                
                 if transaction_date > latest_data.index[-1]:
                     continue
-
+                
                 if fully_sold:
                     break
-
-                if transaction_date not in latest_data.index:
-                    continue
 
                 if 'sold' in transaction and transaction['sold'] == True:
                     fully_sold = True
@@ -455,14 +438,14 @@ def calculate_adjusted_portfolio_values_as_of_date(transactions_dict, downloaded
                 current_value_in_gbp = current_value_in_stock_currency
 
             if not fully_sold:
-                position_values[ticker] = current_value_in_gbp
                 total_portfolio_value += current_value_in_gbp
 
         except Exception as e:
-            position_values[ticker] = f"Error: {e}"
+            print(f"Error calculating value for {ticker}: {e}")
 
-    position_values['Total Portfolio'] = total_portfolio_value
-    return position_values
+    return total_portfolio_value
+
+
 
 
 

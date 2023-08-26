@@ -5,9 +5,10 @@ import os
 import pickle
 from datetime import timedelta
 import pandas as pd
+import csv
 
 from utilities import load_dict_from_json, save_to_csv
-from data_retrieval import weekly_performance, calculate_overall_performance, get_eur_exchange_rates, calculate_position_values_with_currency_adjustment, yearly_performance_June2June, yearly_performance_YoY, weekly_portfolio_performance_with_currency_adjustment, calculate_adjusted_portfolio_values_as_of_date
+from data_retrieval import weekly_performance, calculate_overall_performance, get_eur_exchange_rates, calculate_position_values_with_currency_adjustment, yearly_performance_June2June, yearly_performance_YoY, weekly_portfolio_performance_with_currency_adjustment, calculate_total_portfolio_value_as_of_date
 from data_download import download_data_for_tickers, load_saved_data, download_exchange_rates, load_saved_exchange_rates
 
 api_key = "42c83d3d0b0e24c532ce1cd511d95724" # They key is hard-coded... I know it's bad practice FUCK YOU 
@@ -20,7 +21,7 @@ if __name__ == "__main__":
 
     current_tickers = load_dict_from_json('../current_tickers.json')
     
-    print(type(transaction_data))
+    #print(type(transaction_data))
 
     # Download all the data for tickers and exchange rates
 
@@ -58,39 +59,49 @@ if __name__ == "__main__":
 
     #dated = calculate_adjusted_portfolio_values_as_of_date(transaction_data, downloaded_data, downloaded_fx, date="2022-06-01")
 
+    #cutoff_date = "2023-05-31"
 
-    cutoff_date="2023-05-31"
+    #print(downloaded_data)
 
-    def generate_weekly_portfolio_values(transactions_dict, downloaded_data, eur_rates, cutoff_date):
-        # Find the first transaction date in the portfolio
-        first_transaction_date = min(pd.to_datetime(transaction['date']) for ticker, transactions in transactions_dict.items() for transaction in transactions)
-    
-        # Initialize an empty dictionary to hold the results
-        weekly_portfolio_values = {}
-    
-        # Generate dates in weekly increments from the first_transaction_date to the cutoff_date
-        current_date = first_transaction_date
-        cutoff_date = pd.to_datetime(cutoff_date)
-    
-        while current_date <= cutoff_date:
-            # Call the function to calculate the portfolio value for the current date
-            position_values = calculate_adjusted_portfolio_values_as_of_date(transactions_dict, downloaded_data, eur_rates, current_date)
+    #weekly_value = calculate_total_portfolio_value_as_of_date(transaction_data, downloaded_data, downloaded_fx, date="2022-05-31")
+
+    #print(weekly_value)
+
+
+    # Your function to generate weekly dates
+    def generate_weekly_dates(cutoff_date, end_date="2023-05-31"):
+        weekly_dates = []
         
-            # Store the result in the dictionary
-            weekly_portfolio_values[current_date] = position_values
+        # Convert the dates to datetime objects for manipulation
+        cutoff_date = datetime.strptime(cutoff_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
         
-            # Increment the current date by 7 days
-            current_date += timedelta(days=7)
-    
-        return weekly_portfolio_values
+        # Generate weekly dates from end_date backwards to cutoff_date
+        current_date = end_date
+        while current_date >= cutoff_date:
+            weekly_dates.append(current_date.strftime("%Y-%m-%d"))
+            current_date -= timedelta(days=7)
+        
+        return weekly_dates
 
-# Assuming transactions_dict, downloaded_data, and eur_rates are available
-# cutoff_date = "2023-08-24"
-# results = generate_weekly_portfolio_values(transactions_dict, downloaded_data, eur_rates, cutoff_date)
-# print(results)
+    # Generate weekly dates from 2022-05-17 to 2023-05-31
+    weekly_dates = generate_weekly_dates("2017-12-18")
 
-    weekly_l = generate_weekly_portfolio_values(transaction_data, downloaded_data, downloaded_fx, cutoff_date)
+    # Dictionary to hold the total portfolio value for each date
+    total_portfolio_values = {}
 
-    print(weekly_l)
-    
-    
+    # Loop over each weekly date and calculate the total portfolio value
+    for date in weekly_dates:
+        total_value = calculate_total_portfolio_value_as_of_date(transaction_data, downloaded_data, downloaded_fx, date=date)
+        total_portfolio_values[date] = total_value
+
+    with open('total_portfolio_values.csv', 'w', newline='') as csvfile:
+        fieldnames = ['Date', 'Total Portfolio Value']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for date, value in total_portfolio_values.items():
+            writer.writerow({'Date': date, 'Total Portfolio Value': value})
+
+    print(type(transaction_data))
+    print(downloaded_data['ESGD'].head())
+    print(type(downloaded_data['ESGD'].index[0]))

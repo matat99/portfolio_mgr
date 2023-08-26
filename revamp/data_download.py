@@ -7,7 +7,7 @@ import requests
 def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True):
     data_dict = {}
     start_date = pd.to_datetime("2017-01-01")
-    end_date = pd.to_datetime("today")  # To get data up to today
+    end_date = pd.to_datetime("2023-05-31")  # To get data up to today
 
     for ticker in tickers:
         for i in range(retries):
