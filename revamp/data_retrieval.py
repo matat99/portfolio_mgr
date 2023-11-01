@@ -7,6 +7,8 @@ from pandas.tseries.offsets import DateOffset
 import json
 import time
 from requests.exceptions import RequestException
+from data_download import download_weekly_exchange_rates
+
 
 api_key = "42c83d3d0b0e24c532ce1cd511d95724" # They key is hard-coded... I know it's bad practice FUCK YOU 
 
@@ -113,6 +115,7 @@ def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
                 total_shares -= shares_sold
 
         recent_price = data['Close'].iloc[-1]
+        print(recent_price)
 
         # Getting the close from 5 trading days ago
         one_week_ago_index = -6 if len(data) >= 6 else -len(data)
@@ -449,3 +452,16 @@ def calculate_total_portfolio_value_as_of_date(transactions_dict, downloaded_dat
 
 
 
+
+
+def weekly_portfolio_values(transactions_dict, downloaded_data, api_key):
+    weekly_values = {}
+    
+    eur_rates_data = download_weekly_exchange_rates(api_key)
+
+    for date_str, eur_rates in eur_rates_data.items():
+        date = pd.to_datetime(date_str)
+        value = calculate_total_portfolio_value_as_of_date(transactions_dict, downloaded_data, eur_rates, date)
+        weekly_values[date] = value
+
+    return weekly_values_1

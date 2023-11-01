@@ -37,16 +37,19 @@ def load_saved_data(file_name="downloaded_data.pkl"):
     return data_dict
 
 
-def download_exchange_rates(api_key, start_date='2017-12-01', end_date='2023-05-01', retries=3, delay=5, save_to_file=True):
-    # Generate monthly dates for exchange rates
-    month_starts = pd.date_range(start_date, end_date, freq='MS')
+def download_weekly_exchange_rates(api_key, start_date='2023-08-21', end_date=None, retries=3, delay=5, save_to_file=True):
+    if end_date is None:
+        end_date = pd.Timestamp.today().strftime('%Y-%m-%d')
+
+    # Generate weekly dates for exchange rates
+    week_starts = pd.date_range(start_date, end_date, freq='W')
 
     data_dict = {}
 
     # Target currencies
     target_currencies = ["GBP", "USD", "CAD"]
 
-    for date in month_starts:
+    for date in week_starts:
         date_str = date.strftime('%Y-%m-%d')
         
         # Construct the URL for each specific date
@@ -70,7 +73,7 @@ def download_exchange_rates(api_key, start_date='2017-12-01', end_date='2023-05-
 
     # Save to file if flag is set
     if save_to_file:
-        with open("exchange_rates_data.pkl", "wb") as f:
+        with open("weekly_exchange_rates_data.pkl", "wb") as f:
             pickle.dump(data_dict, f)
 
     return data_dict
