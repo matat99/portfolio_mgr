@@ -8,9 +8,62 @@ import json
 import time
 from requests.exceptions import RequestException
 from data_download import download_weekly_exchange_rates
+import openpyxl
 
 
-api_key = "42c83d3d0b0e24c532ce1cd511d95724" # They key is hard-coded... I know it's bad practice FUCK YOU 
+api_key = "42c83d3d0b0e24c532ce1cd511d95724" # They key is hard-coded... I know it's bad practice
+
+
+def create_excel_with_dataframe(df, sheet_name='Daily Data', file_path='default_stock_data.xlsx'):
+    # Write the data to an Excel file, creating a new file if one doesn't exist
+    try:
+        # Try to open an existing workbook
+        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
+            # If the sheet doesn't exist, write the DataFrame to a new sheet
+            if sheet_name not in writer.book.sheetnames:
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                print(f"Data written to new sheet '{sheet_name}' in the existing Excel file.")
+            else:
+                # If the sheet exists, add a new sheet with a suffix
+                sheet_name_new = f"{sheet_name} {len(writer.book.sheetnames)}"
+                df.to_excel(writer, sheet_name=sheet_name_new, index=False)
+                print(f"Data written to new sheet '{sheet_name_new}' in the existing Excel file.")
+            # Ensure that at least one sheet is visible
+            if not any(sheet.sheet_state != 'hidden' for sheet in writer.book.worksheets):
+                writer.book.active.sheet_state = 'visible'
+    except FileNotFoundError:
+        # If the file doesn't exist, create a new one and write the DataFrame
+        df.to_excel(file_path, sheet_name=sheet_name, index=False)
+        print(f"Data written to sheet '{sheet_name}' in the new Excel file.")
+
+
+def create_combined_ticker_table(data_dict, sheet_name='All Tickers', output_file='combined_stock_data.xlsx'):
+    combined_df = pd.DataFrame()
+    
+    for ticker, data in data_dict.items():
+        df = pd.DataFrame(data)
+        # Print out a message if a particular ticker's data is empty or not found
+        if df.empty:
+            print(f"No data found for ticker: {ticker}")
+            continue
+        if 'Date' not in df.columns:
+            df.reset_index(inplace=True)
+        df.rename(columns={'Close': ticker}, inplace=True)
+        if combined_df.empty:
+            combined_df = df[['Date', ticker]].copy()
+        else:
+            combined_df = combined_df.merge(df[['Date', ticker]], on='Date', how='outer')
+
+    with pd.ExcelWriter(output_file, engine='xlsxwriter') as writer:
+        combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
+        workbook = writer.book
+        worksheet = writer.sheets[sheet_name]
+        gray_format = workbook.add_format({'bg_color': '#D3D3D3'})
+        for idx, col in enumerate(combined_df.columns[1:], start=1):
+            if idx % 2 == 0:
+                worksheet.set_column(idx, idx, None, gray_format)
+
+    print(f"Excel file created with name '{output_file}' containing the combined ticker tables.")
 
 
 def get_eur_exchange_rates(api_key):
@@ -22,7 +75,7 @@ def get_eur_exchange_rates(api_key):
     return data['rates']
 
 
-def calculate_position_values_with_currency_adjustment(transactions_dict, current_tickers, downloaded_data):
+def calculate_position_values_with_currency_adjustment(transactions_dict, current_tickers, downloaded_data, api_key):
     position_values = {}
     total_portfolio_value = 0
 
@@ -40,15 +93,11 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
 
     for name, ticker in current_tickers.items():
         transactions = transactions_dict.get(ticker, [])
-        
-        # If no transactions, move on.
         if not transactions:
             continue
 
         try:
             data = downloaded_data[ticker]
-
-            # Determine the stock's currency using the mapping
             suffix = ticker.split('.')[-1] if '.' in ticker else ''
             currency = currency_mapping.get('.' + suffix, 'USD')
 
@@ -58,16 +107,15 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
                 if transaction_date not in data.index:
                     continue
                 
-                if transaction['amount'] > 0:
-                    shares_bought = transaction['amount'] / data.loc[transaction_date, 'Close']
-                    total_shares += shares_bought
-                else:
-                    shares_sold = -transaction['amount'] / data.loc[transaction_date, 'Close']
-                    total_shares -= shares_sold
+                # Adjust shares based on the transaction type
+                transaction_price = data.loc[transaction_date, 'Close']
+                transaction_shares = transaction['amount'] / transaction_price
+                total_shares += transaction_shares if transaction['amount'] > 0 else -transaction_shares
 
-            current_value_in_stock_currency = total_shares * data['Close'].loc["2022-06-01"] #data['Close'].iloc[-1] last close
+            # Calculate current value in the stock's currency
+            current_value_in_stock_currency = total_shares * data['Close'].iloc[-1]
             
-            # Convert to GBP using the EUR as a pivot
+            # Convert to GBP using the EUR as a pivot currency
             if currency != 'GBP':
                 to_eur_rate = 1 / eur_rates.get(currency, 1)
                 current_value_in_eur = current_value_in_stock_currency * to_eur_rate
@@ -79,10 +127,16 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
             total_portfolio_value += current_value_in_gbp
 
         except Exception as e:
-            position_values[name] = f"Error: {e}"
+            print(f"Error with {name}: {e}")
+            position_values[name] = 0  # Or some error indicator
 
     position_values['Total Portfolio'] = total_portfolio_value
-    return position_values
+
+    # Convert the dictionary to a DataFrame
+    df = pd.DataFrame(list(position_values.items()), columns=['Company Name', 'Position Value (GBP)'])
+    
+    return df
+
 
 
 def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
@@ -115,7 +169,6 @@ def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
                 total_shares -= shares_sold
 
         recent_price = data['Close'].iloc[-1]
-        print(recent_price)
 
         # Getting the close from 5 trading days ago
         one_week_ago_index = -6 if len(data) >= 6 else -len(data)
@@ -130,9 +183,12 @@ def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
     portfolio_weekly_performance = ((end_value - start_value) / start_value) * 100
     weekly_performance_dict['Total Portfolio'] = round(portfolio_weekly_performance, 2)
 
+    # Convert dictionary to DataFrame
     df = pd.DataFrame(weekly_performance_dict.items(), columns=['Company Name', 'Weekly Performance (%)'])
-    df.to_csv('weekly_performance.csv', index=False)
+    
+    # Return the DataFrame
     return df
+
 
 
 def yearly_performance_June2June(transactions_dict, data_dict, name_to_ticker_map):
@@ -240,11 +296,13 @@ def yearly_performance_YoY(transactions_dict, data_dict, name_to_ticker_map):
     return df
 
 
-def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_map, current_portfolio_value):
+def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_map, current_portfolio_value, cutoff_date=None):
     performance_dict = {}
 
-    cutoff_date = pd.to_datetime("2023-05-31")
-
+    # Use the latest data if no cutoff_date is provided
+    if cutoff_date is not None:
+        cutoff_date = pd.to_datetime(cutoff_date)
+    
     for name, ticker in name_to_ticker_map.items():
         # Extract transactions for the ticker
         transactions = transactions_dict.get(ticker, [])
@@ -262,24 +320,29 @@ def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_m
             print(f"Data not available for {ticker} on {first_transaction_date}. Skipping...")
             continue
 
-        # Get close price on purchase date and the most recent close price
+        # Get close price on purchase date
         purchase_price = data.loc[first_transaction_date, 'Close']
-        #recent_price = data['Close'].iloc[-1] # <- This is for last close
-        recent_price = data.loc[cutoff_date, 'Close']
+
+        # If a cutoff_date is provided, use it; otherwise, use the last available close price
+        recent_price = data.loc[cutoff_date, 'Close'] if cutoff_date is not None else data['Close'].iloc[-1]
 
         # Calculate percentage change for the stock
         percentage_change = ((recent_price - purchase_price) / purchase_price) * 100
         performance_dict[name] = round(percentage_change, 2)
 
     # Calculate overall performance of the fund
-    starting_fund_value = 10000
+    starting_fund_value = 10000  # This should be adjusted if the starting value is different or passed as a parameter
     fund_percentage_change = ((current_portfolio_value - starting_fund_value) / starting_fund_value) * 100
     performance_dict["Overall Fund Performance"] = round(fund_percentage_change, 2)
 
-    # Convert dictionary to DataFrame and save to CSV
+    # Convert dictionary to DataFrame
     df = pd.DataFrame(performance_dict.items(), columns=['Company Name', 'Performance (%)'])
-    df.to_csv('overall_performance.csv', index=False)
+    # Optionally, you could save to CSV based on a condition or argument
+
+    # Return the DataFrame
     return df
+
+
 
 
 def weekly_portfolio_performance_with_currency_adjustment(transactions_data, downloaded_fx, downloaded_data):
@@ -447,11 +510,6 @@ def calculate_total_portfolio_value_as_of_date(transactions_dict, downloaded_dat
             print(f"Error calculating value for {ticker}: {e}")
 
     return total_portfolio_value
-
-
-
-
-
 
 
 def weekly_portfolio_values(transactions_dict, downloaded_data, api_key):

@@ -4,16 +4,19 @@ import pandas as pd
 import pickle
 import requests
 
-def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True):
+def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True, file_path="downloaded_data.pkl"):
     data_dict = {}
     start_date = pd.to_datetime("2017-01-01")
-    end_date = pd.to_datetime("2023-05-31")  # To get data up to today
+    # end_date is not set which defaults to the current date
 
     for ticker in tickers:
         for i in range(retries):
             try:
-                data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+                # Download the data up to the current date
+                data = yf.download(ticker, start=start_date, progress=False)
+                # Assuming success, store the data in the dictionary
                 data_dict[ticker] = data
+                print(f"Data for {ticker} downloaded successfully with latest date: {data.index[-1].date()}")
                 break
             except Exception as e:
                 print(f"Error downloading data for {ticker}: {e}")
@@ -26,10 +29,11 @@ def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True):
 
     # Save to file if flag is set
     if save_to_file:
-        with open("downloaded_data.pkl", "wb") as f:
+        with open(file_path, "wb") as f:
             pickle.dump(data_dict, f)
 
     return data_dict
+
 
 def load_saved_data(file_name="downloaded_data.pkl"):
     with open(file_name, "rb") as f:
