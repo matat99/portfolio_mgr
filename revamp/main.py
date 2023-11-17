@@ -46,10 +46,7 @@ if __name__ == "__main__":
 
     if args.weekly_report:
         # Calculate position values with current exchange rates
-        position_values_df = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data, api_key)
-
-        # Assuming position_values_df includes 'Total Portfolio' as one of the rows
-        total_portfolio_value = position_values_df[position_values_df['Company Name'] == 'Total Portfolio']['Position Value (GBP)'].iloc[0]
+        position_values_df, total_portfolio_value = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data, api_key)
 
         # Calculate weekly and overall performance
         weekly_perf_df = weekly_performance(transaction_data, downloaded_data, current_tickers)
@@ -73,40 +70,8 @@ if __name__ == "__main__":
         report_df.to_excel('weekly_report.xlsx', index=False)
         print("Weekly report generated and saved to 'weekly_report.xlsx'")
 
+
 ## dev
-
-# Convert the sample dataframe to a string with a CSV format and write it to a text file
-pkl_file_path = 'downloaded_data.pkl'
-
-with open(pkl_file_path, 'rb') as file:
-    downloaded_data_pkl = pickle.load(file)
-
-# Check the type of the loaded data
-print(f"Data type: {type(downloaded_data_pkl)}")
-
-# If it's a dictionary, print its keys and some sample data
-if isinstance(downloaded_data_pkl, dict):
-    for key, value in downloaded_data_pkl.items():
-        print(f"\nKey: {key}")
-        # Assuming the value is a DataFrame or a similar structure, print the first few rows
-        print(value.head())
-else:
-    # If it's not a dictionary, just print out the raw data
-    print(downloaded_data_pkl)
-
-# Debug the 'COLD' and '4I1.F' tickers specifically
-if 'COLD' in downloaded_data:
-    print("COLD data before processing:", downloaded_data['COLD'])
-else:
-    print("COLD data not found.")
-
-if '4I7.F' in downloaded_data:
-    print("4I7.F data before processing:", downloaded_data['4I7.F'])
-else:
-    print("4I7.F data not found.")
-
-
-create_combined_ticker_table(downloaded_data)
 
 
 
