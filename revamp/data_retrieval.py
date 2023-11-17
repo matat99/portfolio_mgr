@@ -135,7 +135,7 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
     # Convert the dictionary to a DataFrame
     df = pd.DataFrame(list(position_values.items()), columns=['Company Name', 'Position Value (GBP)'])
     
-    return df
+    return df, total_portfolio_value
 
 
 
