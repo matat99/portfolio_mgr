@@ -126,6 +126,7 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
             position_values[name] = current_value_in_gbp
             total_portfolio_value += current_value_in_gbp
 
+            print(current_value_in_gbp)
         except Exception as e:
             print(f"Error with {name}: {e}")
             position_values[name] = 0  # Or some error indicator
