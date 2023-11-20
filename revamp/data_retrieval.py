@@ -138,7 +138,7 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
             position_values[name] = f"Error: {e}"
 
     position_values['Total Portfolio'] = total_portfolio_value
-    return position_values
+    
 
     # Convert the dictionary to a DataFrame
     df = pd.DataFrame(list(position_values.items()), columns=['Company Name', 'Position Value (GBP)'])
@@ -339,9 +339,9 @@ def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_m
         performance_dict[name] = round(percentage_change, 2)
 
     # Calculate overall performance of the fund
-    starting_fund_value = 10000  # This should be adjusted if the starting value is different or passed as a parameter
+    starting_fund_value = 10000  
     fund_percentage_change = ((current_portfolio_value - starting_fund_value) / starting_fund_value) * 100
-    performance_dict["Overall Fund Performance"] = round(fund_percentage_change, 2)
+    performance_dict["Total Portfolio"] = round(fund_percentage_change, 2)
 
     # Convert dictionary to DataFrame
     df = pd.DataFrame(performance_dict.items(), columns=['Company Name', 'Performance (%)'])

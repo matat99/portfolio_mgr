@@ -47,10 +47,13 @@ if __name__ == "__main__":
     if args.weekly_report:
         # Calculate position values with current exchange rates
         position_values_df = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data)
+        
+        total_portfolio_value = position_values_df[position_values_df['Company Name'] == 'Total Portfolio']['Position Value (GBP)'].iloc[-1]
 
         # Calculate weekly and overall performance
         weekly_perf_df = weekly_performance(transaction_data, downloaded_data, current_tickers)
         overall_perf_df = calculate_overall_performance(transaction_data, downloaded_data, current_tickers, total_portfolio_value)
+        print(overall_perf_df.tail())
 
         # Merge weekly and overall performance DataFrames into the position_values_df based on 'Company Name'
         report_df = position_values_df.merge(weekly_perf_df, on='Company Name', how='left')
