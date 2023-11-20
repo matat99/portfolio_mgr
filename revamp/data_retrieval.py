@@ -75,7 +75,7 @@ def get_eur_exchange_rates(api_key):
     return data['rates']
 
 
-def calculate_position_values_with_currency_adjustment(transactions_dict, current_tickers, downloaded_data, api_key):
+def calculate_position_values_with_currency_adjustment(transactions_dict, current_tickers, downloaded_data):
     position_values = {}
     total_portfolio_value = 0
 
@@ -93,11 +93,15 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
 
     for name, ticker in current_tickers.items():
         transactions = transactions_dict.get(ticker, [])
+        
+        # If no transactions, move on.
         if not transactions:
             continue
 
         try:
             data = downloaded_data[ticker]
+
+            # Determine the stock's currency using the mapping
             suffix = ticker.split('.')[-1] if '.' in ticker else ''
             currency = currency_mapping.get('.' + suffix, 'USD')
 
@@ -107,15 +111,19 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
                 if transaction_date not in data.index:
                     continue
                 
-                # Adjust shares based on the transaction type
-                transaction_price = data.loc[transaction_date, 'Close']
-                transaction_shares = transaction['amount'] / transaction_price
-                total_shares += transaction_shares if transaction['amount'] > 0 else -transaction_shares
+                if transaction['amount'] > 0:
+                    shares_bought = transaction['amount'] / data.loc[transaction_date, 'Close']
+                    total_shares += shares_bought
+                    
+                else:
+                    shares_sold = -transaction['amount'] / data.loc[transaction_date, 'Close']
+                    total_shares -= shares_sold
+                    
 
-            # Calculate current value in the stock's currency
-            current_value_in_stock_currency = total_shares * data['Close'].iloc[-1]
+            print(total_shares)
+            current_value_in_stock_currency = total_shares * data['Close'].iloc[-1] #last close #data['Close'].loc["2022-06-01"]
             
-            # Convert to GBP using the EUR as a pivot currency
+            # Convert to GBP using the EUR as a pivot
             if currency != 'GBP':
                 to_eur_rate = 1 / eur_rates.get(currency, 1)
                 current_value_in_eur = current_value_in_stock_currency * to_eur_rate
@@ -126,17 +134,16 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
             position_values[name] = current_value_in_gbp
             total_portfolio_value += current_value_in_gbp
 
-            print(current_value_in_gbp)
         except Exception as e:
-            print(f"Error with {name}: {e}")
-            position_values[name] = 0  # Or some error indicator
+            position_values[name] = f"Error: {e}"
 
     position_values['Total Portfolio'] = total_portfolio_value
+    return position_values
 
     # Convert the dictionary to a DataFrame
     df = pd.DataFrame(list(position_values.items()), columns=['Company Name', 'Position Value (GBP)'])
     
-    return df, total_portfolio_value
+    return df
 
 
 

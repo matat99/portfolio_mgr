@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     if args.weekly_report:
         # Calculate position values with current exchange rates
-        position_values_df, total_portfolio_value = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data, api_key)
+        position_values_df = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data)
 
         # Calculate weekly and overall performance
         weekly_perf_df = weekly_performance(transaction_data, downloaded_data, current_tickers)
