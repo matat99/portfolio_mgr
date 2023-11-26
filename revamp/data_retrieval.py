@@ -146,7 +146,6 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
     return df
 
 
-
 def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
     weekly_performance_dict = {}
 
@@ -196,7 +195,6 @@ def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
     
     # Return the DataFrame
     return df
-
 
 
 def yearly_performance_June2June(transactions_dict, data_dict, name_to_ticker_map):
