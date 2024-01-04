@@ -8,9 +8,7 @@ import xlsxwriter
 from data_retrieval import (
     calculate_overall_performance,
     weekly_performance,
-    calculate_position_values_with_currency_adjustment,
-    create_excel_with_dataframe,
-    create_combined_ticker_table
+    calculate_position_values_with_currency_adjustment
 )
 from data_download import (
     download_data_for_tickers,
