@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     if args.weekly_report:
         # Calculate position values with current exchange rates
-        position_values_df = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data)
+        position_values_df = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data, api_key)
         
         total_portfolio_value = position_values_df[position_values_df['Company Name'] == 'Total Portfolio']['Position Value (GBP)'].iloc[-1]
 
@@ -74,6 +74,12 @@ if __name__ == "__main__":
 
 ## dev
 
+for ticker, data in downloaded_data.items():
+    if 'Dividends' in data.columns:
+        print(f"Dividends for {ticker}:")
+        print(data['Dividends'])
+    else:
+        print(f"No dividend data available for {ticker}.")
 
 
 
