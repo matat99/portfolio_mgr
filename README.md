@@ -27,10 +27,11 @@ cd stirling-portfolio-manager
 pip install -r requirements.txt
 
 ## To Do
+- [ ] **fill the spreadsheet with historical data**
 - [ ] Summarize the portfolio's annual performance.
 - [ ] Update a spreadsheet to create a history of the portfolio for future committees.
 - [ ] Generate and document quarterly performance data.
 - [ ] Generate and document year-over-year (YoY) performance data, including data tables and graphs.
-- [ ] Track the cash position of the portfolio.
+- [ ] **Track the cash position of the portfolio.**
 - [x] Manage dividend additions and updates in the portfolio.
 - [x] Decide on the amount of shares for each position and update the transactions file.
