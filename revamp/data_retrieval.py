@@ -7,28 +7,23 @@ from pandas.tseries.offsets import DateOffset
 import json
 import time
 from requests.exceptions import RequestException
-from data_download import download_weekly_exchange_rates
 import openpyxl
 
+currency_mapping = {
+        '': 'USD',     # Default to USD for NASDAQ and similar
+        '.L': 'GBP',
+        '.DE': 'EUR',
+        '.PA': 'EUR',
+        '.TO': 'CAD',   # Toronto Stock Exchange
+        '.F': 'EUR'
+    }
 
-api_key = "42c83d3d0b0e24c532ce1cd511d95724" # The key is hard-coded... I know it's bad practice
-
-
-def get_eur_exchange_rates(api_key):
-    """Fetch exchange rates for 1 EUR to other currencies."""
-    target_currencies = ["GBP", "USD", "CAD"]
-    url = f"http://api.exchangeratesapi.io/latest?base=EUR&symbols={','.join(target_currencies)}&access_key={api_key}"
-    response = requests.get(url)
-    data = response.json()
-    return data['rates']
-
-
-def calculate_position_values_with_currency_adjustment(transactions_dict, current_tickers, downloaded_data, api_key):
+def calculate_position_values_with_currency_adjustment(transactions_dict, current_tickers, downloaded_data, fx_rates):
     position_values = {}
     total_portfolio_value = 0
 
     # Fetch EUR exchange rates to other major currencies
-    eur_rates = get_eur_exchange_rates(api_key)
+    eur_rates = fx_rates
 
     currency_mapping = {
         '': 'USD',     # Default to USD for NASDAQ and similar
@@ -65,8 +60,7 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
                 continue
 
             current_value_in_stock_currency = total_shares * data['Close'].iloc[-1]
-            print(current_value_in_stock_currency)
-            print(name)
+            
             # Convert to GBP using the EUR as a pivot
             if currency != 'GBP':
                 to_eur_rate = 1 / eur_rates.get(currency, 1)
@@ -87,7 +81,6 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
     df = pd.DataFrame(list(position_values.items()), columns=['Company Name', 'Position Value (GBP)'])
     
     return df
-
 
 
 def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
@@ -147,8 +140,6 @@ def weekly_performance(transactions_dict, data_dict, name_to_ticker_map):
     return df
 
 
-
-
 def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_map, current_portfolio_value, cutoff_date=None):
     performance_dict = {}
 
@@ -194,4 +185,92 @@ def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_m
 
     # Return the DataFrame
     return df
+
+
+
+
+def calculate_total_dividends(transactions_dict, historical_data, fx_rates):
+    """
+    Calculate the total dividends received from each position in GBP,
+    stopping once the position is fully sold.
+
+    :param transactions_dict: Dictionary containing transactions for each stock.
+    :param historical_data: Dictionary containing historical data for each stock, including dividends.
+    :param fx_rates: Dictionary of exchange rates with EUR as the base.
+    :param currency_mapping: Dictionary mapping stock tickers to their respective currencies.
+    :return: Dictionary of total dividends received for each stock in GBP.
+    """
+
+    currency_mapping = {
+        '': 'USD',     # Default to USD for NASDAQ and similar
+        '.L': 'GBP',
+        '.DE': 'EUR',
+        '.PA': 'EUR',
+        '.TO': 'CAD',   # Toronto Stock Exchange
+        '.F': 'EUR'
+    }
+
+    total_dividends_gbp = {}
+    sum_of_all_dividends = 0
+
+    for ticker, transactions in transactions_dict.items():
+        if not transactions or ticker not in historical_data:
+            continue
+
+        current_shares = 0
+        stock_dividends_gbp = 0
+        position_sold = False
+
+        # Determine the currency of the stock
+        suffix = ticker.split('.')[-1] if '.' in ticker else ''
+        currency = currency_mapping.get('.' + suffix, 'USD')
+
+        # Sort transactions by date
+        sorted_transactions = sorted(transactions, key=lambda x: x['date'])
+
+        for date, row in historical_data[ticker].iterrows():
+            # Update current shares and check for the sold flag
+            while sorted_transactions and sorted_transactions[0]['date'] <= date.strftime('%Y-%m-%d'):
+                transaction = sorted_transactions.pop(0)
+                current_shares += transaction['shares']
+                if 'sold' in transaction and transaction['sold']:
+                    position_sold = True
+
+            if position_sold:
+                break  # Stop processing dividends if the position is sold
+
+            # Add dividends if shares are held
+            if current_shares > 0 and 'Dividends' in row and row['Dividends'] > 0:
+                dividend_amount = row['Dividends'] * current_shares
+                stock_dividends_gbp += convert_dividend_to_gbp(dividend_amount, currency, date, fx_rates)
+
+        total_dividends_gbp[ticker] = stock_dividends_gbp
+        sum_of_all_dividends += stock_dividends_gbp
+
+
+    return total_dividends_gbp, sum_of_all_dividends
+
+def convert_dividend_to_gbp(amount, currency, date, fx_rates):
+    """
+    Convert an amount from a given currency to GBP using EUR as a pivot.
+
+    :param amount: Amount in the original currency.
+    :param currency: Original currency of the amount.
+    :param date: Date of the conversion for fetching the appropriate exchange rate.
+    :param fx_rates: Dictionary of exchange rates with EUR as the base.
+    :return: Converted amount in GBP.
+    """
+    if currency == 'GBP':
+        return amount
+
+    # Get the exchange rate to EUR for the given currency
+    to_eur_rate = fx_rates.get(currency, 1)
+
+    # Convert amount to EUR
+    amount_in_eur = amount / to_eur_rate
+
+    # Convert amount from EUR to GBP
+    eur_to_gbp_rate = fx_rates.get('GBP', 1)
+    return amount_in_eur * eur_to_gbp_rate
+
 
