@@ -8,12 +8,13 @@ import xlsxwriter
 from data_retrieval import (
     calculate_overall_performance,
     weekly_performance,
-    calculate_position_values_with_currency_adjustment
+    calculate_position_values_with_currency_adjustment,
+    calculate_total_dividends
 )
 from data_download import (
     download_data_for_tickers,
     load_saved_data,
-    download_weekly_exchange_rates,
+    get_eur_exchange_rates,
     load_saved_exchange_rates
 )
 
@@ -39,19 +40,19 @@ if __name__ == "__main__":
     current_tickers = load_dict_from_json(args.tickers)
 
     # Download or load the data based on the argument provided
-    downloaded_fx = download_weekly_exchange_rates(api_key) if args.download else load_saved_exchange_rates()
+    downloaded_fx = get_eur_exchange_rates(api_key) if args.download else load_saved_exchange_rates()
     downloaded_data = download_data_for_tickers(transaction_data) if args.download else load_saved_data()
 
     if args.weekly_report:
         # Calculate position values with current exchange rates
-        position_values_df = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data, api_key)
+        position_values_df = calculate_position_values_with_currency_adjustment(transaction_data, current_tickers, downloaded_data, downloaded_fx)
         
         total_portfolio_value = position_values_df[position_values_df['Company Name'] == 'Total Portfolio']['Position Value (GBP)'].iloc[-1]
 
         # Calculate weekly and overall performance
         weekly_perf_df = weekly_performance(transaction_data, downloaded_data, current_tickers)
         overall_perf_df = calculate_overall_performance(transaction_data, downloaded_data, current_tickers, total_portfolio_value)
-        print(overall_perf_df.tail())
+        print(position_values_df.tail())
 
         # Merge weekly and overall performance DataFrames into the position_values_df based on 'Company Name'
         report_df = position_values_df.merge(weekly_perf_df, on='Company Name', how='left')
@@ -74,12 +75,7 @@ if __name__ == "__main__":
 
 ## dev
 
-for ticker, data in downloaded_data.items():
-    if 'Dividends' in data.columns:
-        print(f"Dividends for {ticker}:")
-        print(data['Dividends'])
-    else:
-        print(f"No dividend data available for {ticker}.")
-
+div = calculate_total_dividends(transaction_data, downloaded_data, downloaded_fx)
+print(div)
 
 

@@ -32,5 +32,5 @@ pip install -r requirements.txt
 - [ ] Generate and document quarterly performance data.
 - [ ] Generate and document year-over-year (YoY) performance data, including data tables and graphs.
 - [ ] Track the cash position of the portfolio.
-- [ ] Manage dividend additions and updates in the portfolio.
-- [ ] Decide on the amount of shares for each position and update the transactions file.
+- [x] Manage dividend additions and updates in the portfolio.
+- [x] Decide on the amount of shares for each position and update the transactions file.
