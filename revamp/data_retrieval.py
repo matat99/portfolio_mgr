@@ -8,6 +8,7 @@ import json
 import time
 from requests.exceptions import RequestException
 import openpyxl
+import pickle
 
 currency_mapping = {
         '': 'USD',     # Default to USD for NASDAQ and similar
@@ -187,8 +188,6 @@ def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_m
     return df
 
 
-
-
 def calculate_total_dividends(transactions_dict, historical_data, fx_rates):
     """
     Calculate the total dividends received from each position in GBP,
@@ -250,6 +249,7 @@ def calculate_total_dividends(transactions_dict, historical_data, fx_rates):
 
     return total_dividends_gbp, sum_of_all_dividends
 
+
 def convert_dividend_to_gbp(amount, currency, date, fx_rates):
     """
     Convert an amount from a given currency to GBP using EUR as a pivot.
@@ -272,5 +272,60 @@ def convert_dividend_to_gbp(amount, currency, date, fx_rates):
     # Convert amount from EUR to GBP
     eur_to_gbp_rate = fx_rates.get('GBP', 1)
     return amount_in_eur * eur_to_gbp_rate
+
+
+def load_exchange_rates(file_path):
+    with open(file_path, 'rb') as file:
+        return pickle.load(file)
+
+
+def convert_to_gbp(amount, currency, date, exchange_rates):
+    if currency == 'GBP':
+        return amount  # No conversion needed for GBP
+
+    # Get the exchange rate to EUR for the given currency
+    to_eur_rate = exchange_rates[date].get(currency, 1)
+
+    # Convert amount to EUR
+    amount_in_eur = amount / to_eur_rate
+
+    # Convert amount from EUR to GBP
+    eur_to_gbp_rate = exchange_rates[date].get('GBP', 1)
+    return amount_in_eur * eur_to_gbp_rate
+
+
+def calculate_cash_position(transactions_dict, exchange_rates_file, historical_data, fx_rates):
+    cash_position = 10000
+    exchange_rates = load_exchange_rates(exchange_rates_file)
+    currency_mapping = {
+        '': 'USD',     # Default to USD for NASDAQ and similar
+        '.L': 'GBP',
+        '.DE': 'EUR',
+        '.PA': 'EUR',
+        '.TO': 'CAD',   # Toronto Stock Exchange
+        '.F': 'EUR'
+    }
+
+    for ticker, transactions in transactions_dict.items():
+        suffix = ticker.split('.')[-1] if '.' in ticker else ''
+        currency = currency_mapping.get('.' + suffix, 'USD')
+
+        for transaction in transactions:
+            # Use historical_data for share prices
+            share_price = historical_data[ticker]['Close'].loc[transaction['date']]
+            transaction_amount_gbp = convert_to_gbp(transaction['shares'] * share_price, currency, transaction['date'], exchange_rates)
+            print(transaction_amount_gbp)
+            print(transaction)
+            
+            # Subtract the transaction amount (buying subtracts, selling adds due to negative shares) 
+            cash_position -= transaction_amount_gbp
+
+    total_dividends_gbp = calculate_total_dividends(transactions_dict, historical_data, fx_rates)[1]
+    print(total_dividends_gbp)
+    cash_position += total_dividends_gbp
+
+    return cash_position
+
+
 
 
