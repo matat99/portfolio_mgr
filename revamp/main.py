@@ -9,7 +9,10 @@ from data_retrieval import (
     calculate_overall_performance,
     weekly_performance,
     calculate_position_values_with_currency_adjustment,
-    calculate_total_dividends
+    calculate_total_dividends,
+    calculate_cash_position,
+    convert_to_gbp,
+    load_exchange_rates
 )
 from data_download import (
     download_data_for_tickers,
@@ -57,6 +60,7 @@ if __name__ == "__main__":
         # Merge weekly and overall performance DataFrames into the position_values_df based on 'Company Name'
         report_df = position_values_df.merge(weekly_perf_df, on='Company Name', how='left')
         report_df = report_df.merge(overall_perf_df, on='Company Name', how='left')
+        
 
         # Rename columns as per your format if needed
         report_df.rename(columns={
@@ -65,17 +69,54 @@ if __name__ == "__main__":
             'Performance': 'Performance (%)'
         }, inplace=True)
 
+        # Calculate the cash position
+        cash_position = calculate_cash_position(transaction_data, "./databases/exchange_rates.pkl", downloaded_data, downloaded_fx)
+
+        # Calculate total div received
+        tot_div = calculate_total_dividends(transaction_data, downloaded_data, downloaded_fx)[1]
+
+        # Create a new DataFrame row for the cash position
+        cash_row = pd.DataFrame([["Cash", cash_position, "---", tot_div]], columns=report_df.columns)
+
+        # Append the cash position row to the report DataFrame
+        report_df = pd.concat([report_df, cash_row], ignore_index=True)
+
         # Select and reorder the columns for the final report
         report_df = report_df[['Company Name', 'Weekly Performance (%)', 'Performance (%)', 'Value (£)']]
 
         # Save the DataFrame to an Excel file
         report_df.to_excel('weekly_report.xlsx', index=False)
+
+
+        ## ===============================
+        ## Prettifying the excel file here
+
+        excel_file_path = 'weekly_report.xlsx'
+
+        # Create a Pandas Excel writer using xlsxwriter as the engine
+        writer = pd.ExcelWriter(excel_file_path, engine='xlsxwriter')
+        report_df.to_excel(writer, index=False, sheet_name='Weekly_Update')
+
+        # Access the xlsxwriter workbook and worksheet objects
+        workbook = writer.book
+        worksheet = writer.sheets['Weekly_Update']
+
+        # Define the format: centered text
+        centered_format = workbook.add_format({'align': 'center', 'num_format': '0.00'})
+
+        # Apply the format to the columns
+        # Assuming 'Weekly Performance (%)', 'Performance (%)', 'Value (£)' are in columns B, C, D
+        for col in ['B', 'C', 'D']:
+            worksheet.set_column(f'{col}:{col}', None, centered_format)
+
+        # Close the Pandas Excel writer and output the Excel file
+        writer.close()
+
         print("Weekly report generated and saved to 'weekly_report.xlsx'")
 
 
 ## dev
 
-div = calculate_total_dividends(transaction_data, downloaded_data, downloaded_fx)
-print(div)
+
 
 
