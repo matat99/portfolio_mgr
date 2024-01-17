@@ -9,7 +9,7 @@ import pandas as pd
 import time
 import pickle
 
-def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True, file_path="downloaded_data.pkl"):
+def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True, file_path="./databases/downloaded_data.pkl"):
     data_dict = {}
     start_date = pd.to_datetime("2017-12-01")
 
@@ -58,14 +58,14 @@ def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True, fi
 
 
 
-def load_saved_data(file_name="downloaded_data.pkl"):
+def load_saved_data(file_name="./databases/downloaded_data.pkl"):
     with open(file_name, "rb") as f:
         data_dict = pickle.load(f)
     return data_dict
 
 
 
-def get_eur_exchange_rates(api_key, save_to_file=True, file_path="exchange_rates_data.pkl"):
+def get_eur_exchange_rates(api_key, save_to_file=True, file_path="./databases/exchange_rates_data.pkl"):
     """Fetch exchange rates for 1 EUR to other currencies and save them to a file."""
     target_currencies = ["GBP", "USD", "CAD"]
     url = f"http://api.exchangeratesapi.io/latest?base=EUR&symbols={','.join(target_currencies)}&access_key={api_key}"
@@ -82,7 +82,7 @@ def get_eur_exchange_rates(api_key, save_to_file=True, file_path="exchange_rates
 
 
 
-def load_saved_exchange_rates(file_name="exchange_rates_data.pkl"):
+def load_saved_exchange_rates(file_name="./databases/exchange_rates_data.pkl"):
     with open(file_name, "rb") as f:
         data_dict = pickle.load(f)
     return data_dict
