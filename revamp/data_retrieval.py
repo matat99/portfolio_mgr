@@ -9,6 +9,7 @@ import time
 from requests.exceptions import RequestException
 import openpyxl
 import pickle
+import matplotlib.pyplot as plt
 
 currency_mapping = {
         '': 'USD',     # Default to USD for NASDAQ and similar
@@ -325,6 +326,167 @@ def calculate_cash_position(transactions_dict, exchange_rates_file, historical_d
     cash_position += total_dividends_gbp
 
     return cash_position
+
+
+import pandas as pd
+
+def calculate_daily_portfolio_values(transactions, historical_stock_data, exchange_rates):
+    currency_mapping = {
+        '': 'USD',     # Default to USD for NASDAQ and similar
+        '.L': 'GBP',
+        '.DE': 'EUR',
+        '.PA': 'EUR',
+        '.TO': 'CAD',   # Toronto Stock Exchange
+        '.F': 'EUR'
+    }
+
+    # Extract transaction dates and convert them to Timestamp objects
+    all_transaction_dates = [pd.to_datetime(tx['date']) for txlist in transactions.values() for tx in txlist]
+    
+    # Determine the earliest transaction date
+    start_date = min(all_transaction_dates)
+
+    # Find the latest date available in historical stock data
+    end_date = min([historical_stock_data[ticker].index.max() for ticker in transactions if ticker in historical_stock_data])
+
+    # Initialize a DataFrame to store daily values
+    date_range = pd.date_range(start_date, end_date)
+    portfolio_values = pd.DataFrame(index=date_range)
+
+    for ticker, txlist in transactions.items():
+        suffix = ticker.split('.')[-1] if '.' in ticker else ''
+        currency = currency_mapping.get('.' + suffix, 'USD')
+        stock_data = historical_stock_data.get(ticker, pd.DataFrame())
+
+        for single_date in date_range:
+            stock_value = calculate_stock_value(ticker, txlist, stock_data, exchange_rates, single_date, currency_mapping)
+            portfolio_values.at[single_date, ticker] = stock_value
+
+    return portfolio_values.fillna(0)
+
+
+def calculate_stock_value(ticker, transactions, historical_data, exchange_rates, date, currency_mapping):
+    total_shares = 0
+    position_sold = False
+
+    # Determine the stock's currency using the mapping
+    suffix = ticker.split('.')[-1] if '.' in ticker else ''
+    currency = currency_mapping.get('.' + suffix, 'USD')
+
+    for transaction in transactions:
+        transaction_date = pd.to_datetime(transaction['date'])
+        if transaction_date <= date:
+            if 'sold' in transaction and transaction['sold']:
+                position_sold = True
+                break
+            total_shares += transaction['shares']
+
+    if position_sold or total_shares <= 0:
+        return 0  # Position is closed or no shares held
+
+    if date in historical_data.index:
+        close_price = historical_data.loc[date, 'Close']
+        stock_value = total_shares * close_price
+
+        # Convert the value to GBP using exchange rates
+        if currency != 'GBP':
+            to_eur_rate = exchange_rates[date.strftime("%Y-%m-%d")].get(currency, 1)
+            amount_in_eur = stock_value / to_eur_rate
+            eur_to_gbp_rate = exchange_rates[date.strftime("%Y-%m-%d")].get('GBP', 1)
+            return amount_in_eur * eur_to_gbp_rate
+        else:
+            return stock_value
+    else:
+        return 0  # No data for the given date
+
+
+# Example usage
+# Load your data (transaction_data, historical_stock_data, exchange_rates)
+# transaction_data = {'BLK': [{"date":"2020-12-30", "shares":2}], ...}
+# historical_stock_data = {'BLK': DataFrame_of_BLK_stock_data, ...}
+# exchange_rates = { ... }  # Loaded from exchange_rates.pkl
+# currency_mapping = {...}
+# daily_values_df = calculate_daily_portfolio_values(transaction_data, historical_stock_data, exchange_rates, currency_mapping)
+
+
+def calculate_daily_dividends(transactions, historical_stock_data, exchange_rates):
+    currency_mapping = {
+        '': 'USD',     # Default to USD for NASDAQ and similar
+        '.L': 'GBP',
+        '.DE': 'EUR',
+        '.PA': 'EUR',
+        '.TO': 'CAD',   # Toronto Stock Exchange
+        '.F': 'EUR'
+    }
+    # Convert transaction dates to Timestamps and find the earliest transaction date
+    all_transaction_dates = [pd.to_datetime(tx['date']) for txlist in transactions.values() for tx in txlist]
+    start_date = min(all_transaction_dates)
+
+    # Find the latest date in the historical stock data
+    end_date = max([stock_data.index.max() for stock_data in historical_stock_data.values()])
+
+    # Initialize a DataFrame to store daily dividend values with 0.0 (float) as default
+    date_range = pd.date_range(start_date, end_date)
+    dividend_values = pd.DataFrame({'Date': date_range, 'Dividends GBP': 0.0})  # Use 0.0 to set dtype as float
+
+    # Iterate through each day within the date range
+    for single_date in date_range:
+        total_dividends_gbp = 0.0
+
+        for ticker, stock_data in historical_stock_data.items():
+            if single_date in stock_data.index and stock_data.loc[single_date, 'Dividends'] > 0:
+                # Determine the stock's currency
+                suffix = ticker.split('.')[-1] if '.' in ticker else ''
+                currency = currency_mapping.get('.' + suffix, 'USD')
+
+                total_shares = calculate_total_shares_held(transactions.get(ticker, []), single_date)
+                dividend_amount = total_shares * stock_data.loc[single_date, 'Dividends']
+                dividend_gbp = convert_dividend_to_gbp(dividend_amount, currency, single_date, exchange_rates)
+
+                total_dividends_gbp += dividend_gbp
+
+        # Update the dividend value for the day
+        if total_dividends_gbp > 0:
+            dividend_values.loc[dividend_values['Date'] == single_date, 'Dividends GBP'] = total_dividends_gbp
+
+    return dividend_values
+
+# Rest of the functions remain the same
+
+
+
+
+def calculate_total_shares_held(transactions, date):
+    total_shares = 0
+    for transaction in transactions:
+        transaction_date = pd.to_datetime(transaction['date'])
+        if transaction_date <= date:
+            total_shares += transaction['shares']
+    return total_shares
+
+def convert_dividend_to_gbp(amount, currency, date, exchange_rates):
+    if currency == 'GBP':
+        return amount  # No conversion needed for GBP
+
+    # Get the exchange rate to EUR for the given currency
+    to_eur_rate = exchange_rates[date.strftime("%Y-%m-%d")].get(currency, 1)
+
+    # Convert amount to EUR
+    amount_in_eur = amount / to_eur_rate
+
+    # Convert amount from EUR to GBP
+    eur_to_gbp_rate = exchange_rates[date.strftime("%Y-%m-%d")].get('GBP', 1)
+    return amount_in_eur * eur_to_gbp_rate
+
+# Example usage
+# Load your data (transaction_data, historical_stock_data, exchange_rates, currency_mapping)
+# daily_dividends = calculate_daily_dividends(transaction_data, historical_stock_data, exchange_rates, currency_mapping)
+
+
+
+
+
+
 
 
 
