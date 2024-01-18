@@ -12,13 +12,17 @@ from data_retrieval import (
     calculate_total_dividends,
     calculate_cash_position,
     convert_to_gbp,
-    load_exchange_rates
+    load_exchange_rates,
+    calculate_daily_portfolio_values,
+    calculate_daily_dividends
 )
 from data_download import (
     download_data_for_tickers,
     load_saved_data,
     get_eur_exchange_rates,
-    load_saved_exchange_rates
+    load_saved_exchange_rates,
+    fetch_and_save_exchange_rates,
+    daterange
 )
 
 # Hardcoded API key for development purposes
@@ -31,6 +35,7 @@ parser.add_argument('--weekly-report', action='store_true', help='Generate weekl
 parser.add_argument('--transactions', default='../transactions.json', help='The path to the transactions JSON file')
 parser.add_argument('--tickers', default='../current_tickers.json', help='The path to the current tickers JSON file')
 parser.add_argument('--excel', action='store_true', help='Development stuffz')
+#parser.add_argument('--update' action='store_true', help='updates the spreadsheets with data')
 
 # Parse the arguments
 args = parser.parse_args()
@@ -114,9 +119,15 @@ if __name__ == "__main__":
 
         print("Weekly report generated and saved to 'weekly_report.xlsx'")
 
+        
+
 
 ## dev
 
+diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
+print(diva)
 
 
+# div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
+# print(div)
 

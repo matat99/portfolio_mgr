@@ -1,3 +1,5 @@
+#script.py
+
 import requests
 import pickle
 import os
@@ -5,31 +7,38 @@ import time
 from datetime import datetime, timedelta
 
 def daterange(start_date, end_date):
-    for n in range(int((end_date - start_date).days)):
+    for n in range(int((end_date - start_date).days) + 1):
         yield start_date + timedelta(n)
 
-def fetch_and_save_exchange_rates(api_key, start_date, end_date, base_currency, file_path):
+def fetch_and_save_exchange_rates(api_key, base_currency, file_path):
     api_url = "http://api.exchangeratesapi.io/v1/"
     exchange_rates = {}
+    today = datetime.now().date()
 
-    # Load existing data if file exists
+    # Load existing data if file exists and find the last date fetched
     if os.path.exists(file_path):
         with open(file_path, 'rb') as file:
             exchange_rates = pickle.load(file)
+            last_date_fetched = datetime.strptime(max(exchange_rates), '%Y-%m-%d').date() if exchange_rates else None
+    else:
+        last_date_fetched = None
 
-    total_days = (end_date - start_date).days
-    days_processed = 0
+    # If the file is up to date, do nothing
+    if last_date_fetched and last_date_fetched >= today:
+        print(f"Exchange rates file is already up to date. \nLast available date: {last_date_fetched}")
+        return
 
-    for single_date in daterange(start_date, end_date):
+    # Determine the start date for fetching data
+    start_date = last_date_fetched + timedelta(days=1) if last_date_fetched else datetime.today().date()
+
+    for single_date in daterange(start_date, today):
         formatted_date = single_date.strftime("%Y-%m-%d")
         response = requests.get(f"{api_url}{formatted_date}?access_key={api_key}&base={base_currency}")
 
         if response.status_code == 200:
             data = response.json()
             exchange_rates[formatted_date] = data.get("rates", {})
-            days_processed += 1
-            print(f"Downloaded data for {formatted_date}. Progress: {days_processed}/{total_days}")
-
+            print(f"Downloaded data for {formatted_date}.")
             # Save the data to a pickle file after each successful request
             with open(file_path, 'wb') as file:
                 pickle.dump(exchange_rates, file)
@@ -38,20 +47,10 @@ def fetch_and_save_exchange_rates(api_key, start_date, end_date, base_currency, 
 
         time.sleep(1)  # Wait for 1 second before the next request
 
-def fetch_exchange_rates_in_chunks(api_keys, start_date, end_date, base_currency, file_path):
-    chunk_size = 990
-    total_days = (end_date - start_date).days
-    for i in range(0, total_days, chunk_size):
-        chunk_start = start_date + timedelta(days=i)
-        chunk_end = min(chunk_start + timedelta(days=chunk_size), end_date)
-        api_key = api_keys[i // chunk_size % len(api_keys)]
-        fetch_and_save_exchange_rates(api_key, chunk_start, chunk_end, base_currency, file_path)
-
 # Example usage
-api_keys = ["8605a82e02a21c79234296dd217baa0d", "d03752bb2df9c6e7406e4d517d292b23", "bea8b0447789aa42c00c0a8774110b28"]  # List of API keys
-start = datetime(2017, 12, 1)
-end = datetime(2024, 1, 16)
+api_key = "42c83d3d0b0e24c532ce1cd511d95724"  # Replace with your actual API key
 base = "EUR"
 file_path = "exchange_rates.pkl"
 
-fetch_exchange_rates_in_chunks(api_keys, start, end, base, file_path)
+fetch_and_save_exchange_rates(api_key, base, file_path)
+
