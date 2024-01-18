@@ -359,8 +359,15 @@ def calculate_daily_portfolio_values(transactions, historical_stock_data, exchan
         stock_data = historical_stock_data.get(ticker, pd.DataFrame())
 
         for single_date in date_range:
+            # Forward fill for weekends and non-trading days
+            if single_date not in stock_data.index and not stock_data.empty:
+                last_available_date = stock_data.index[stock_data.index < single_date].max()
+                stock_data = stock_data.reindex(date_range, method='ffill')
             stock_value = calculate_stock_value(ticker, txlist, stock_data, exchange_rates, single_date, currency_mapping)
             portfolio_values.at[single_date, ticker] = stock_value
+
+    # Sum up values across each row and add as a new column
+    portfolio_values['Total Portfolio Value'] = portfolio_values.sum(axis=1)
 
     return portfolio_values.fillna(0)
 
@@ -380,6 +387,9 @@ def calculate_stock_value(ticker, transactions, historical_data, exchange_rates,
                 position_sold = True
                 break
             total_shares += transaction['shares']
+
+    
+    #print(f"Ticker: {ticker}, Date: {date}, Total Shares: {total_shares}, Position Sold: {position_sold}")
 
     if position_sold or total_shares <= 0:
         return 0  # Position is closed or no shares held
@@ -484,8 +494,104 @@ def convert_dividend_to_gbp(amount, currency, date, exchange_rates):
 
 
 
+def calculate_daily_cash_position(transactions_dict, exchange_rates, historical_data):
+    currency_mapping = {
+        '': 'USD',     # Default to USD for NASDAQ and similar
+        '.L': 'GBP',
+        '.DE': 'EUR',
+        '.PA': 'EUR',
+        '.TO': 'CAD',   # Toronto Stock Exchange
+        '.F': 'EUR'
+    }
+    initial_cash_position = 10000.0
+
+    all_transaction_dates = [pd.to_datetime(tx['date']) for txlist in transactions_dict.values() for tx in txlist]
+    start_date = min(all_transaction_dates)
+    end_date = max([stock_data.index.max() for stock_data in historical_data.values()])
+
+    daily_cash_positions = pd.DataFrame({'Date': pd.date_range(start_date, end_date), 'Cash Position GBP': initial_cash_position})
+
+    for single_date in pd.date_range(start_date, end_date):
+        daily_cash_change = 0.0
+
+        for ticker, transactions in transactions_dict.items():
+            suffix = ticker.split('.')[-1] if '.' in ticker else ''
+            currency = currency_mapping.get('.' + suffix, 'USD')
+
+            for transaction in transactions:
+                transaction_date = pd.to_datetime(transaction['date'])
+                if transaction_date == single_date:
+                    share_price = historical_data[ticker]['Close'].loc[transaction_date]
+                    transaction_amount_gbp = convert_to_gbp_cash(transaction['shares'] * share_price, currency, transaction_date, exchange_rates)
+                    daily_cash_change -= transaction_amount_gbp  # Subtracting both for buying and selling
+
+        if single_date == start_date:
+            daily_cash_positions.loc[daily_cash_positions['Date'] == single_date, 'Cash Position GBP'] = initial_cash_position + daily_cash_change
+        else:
+            prev_day_cash = daily_cash_positions.loc[daily_cash_positions['Date'] == single_date - pd.Timedelta(days=1), 'Cash Position GBP'].values[0]
+            daily_cash_positions.loc[daily_cash_positions['Date'] == single_date, 'Cash Position GBP'] = prev_day_cash + daily_cash_change
+
+    return daily_cash_positions
 
 
+def convert_to_gbp_cash(amount, currency, date, exchange_rates):
+    # Format the date to match the keys in the exchange_rates dictionary
+    formatted_date = date.strftime("%Y-%m-%d")
+
+    if currency == 'GBP':
+        return amount  # No conversion needed for GBP
+
+    # Get the exchange rate to EUR for the given currency
+    to_eur_rate = exchange_rates.get(formatted_date, {}).get(currency, 1)
+
+    # Convert amount to EUR
+    amount_in_eur = amount / to_eur_rate
+
+    # Convert amount from EUR to GBP
+    eur_to_gbp_rate = exchange_rates.get(formatted_date, {}).get('GBP', 1)
+    return amount_in_eur * eur_to_gbp_rate
+
+
+import matplotlib.pyplot as plt
+
+def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df):
+    # Reset index to convert the date index to a column
+    portfolio_values_df = portfolio_values_df.reset_index().rename(columns={'index': 'Date'})
+
+    # Combine the dataframes
+    combined_df = portfolio_values_df.merge(cash_position_df, on='Date')
+    combined_df = combined_df.merge(dividends_df, on='Date')
+
+    # Calculate total portfolio value with and without dividends
+    combined_df['Total Portfolio Value with Dividends'] = combined_df['Total Portfolio Value'] + combined_df['Cash Position GBP'] + combined_df['Dividends GBP']
+    combined_df['Total Portfolio Value without Dividends'] = combined_df['Total Portfolio Value'] + combined_df['Cash Position GBP']
+
+    # Plotting
+    plt.figure(figsize=(15, 7))
+
+    # Plot for total portfolio value without dividends
+    plt.subplot(1, 2, 1)
+    plt.plot(combined_df['Date'], combined_df['Total Portfolio Value without Dividends'], label='Without Dividends', color='blue')
+    plt.title('Total Portfolio Value Over Time Without Dividends')
+    plt.xlabel('Date')
+    plt.ylabel('Value in GBP')
+    plt.legend()
+
+    # Plot for total portfolio value with dividends
+    plt.subplot(1, 2, 2)
+    plt.plot(combined_df['Date'], combined_df['Total Portfolio Value with Dividends'], label='With Dividends', color='green')
+    plt.title('Total Portfolio Value Over Time With Dividends')
+    plt.xlabel('Date')
+    plt.ylabel('Value in GBP')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+    return combined_df
+
+# You would call this function with your dataframes like this:
+# final_df = combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df)
 
 
 
