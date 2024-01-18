@@ -14,7 +14,8 @@ from data_retrieval import (
     convert_to_gbp,
     load_exchange_rates,
     calculate_daily_portfolio_values,
-    calculate_daily_dividends
+    calculate_daily_dividends,
+    calculate_daily_cash_position
 )
 from data_download import (
     download_data_for_tickers,
@@ -123,6 +124,10 @@ if __name__ == "__main__":
 
 
 ## dev
+
+
+# divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
+# print(divi)
 
 diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
 print(diva)
