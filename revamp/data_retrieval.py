@@ -554,7 +554,7 @@ def convert_to_gbp_cash(amount, currency, date, exchange_rates):
 
 import matplotlib.pyplot as plt
 
-def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df):
+def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, save_to_file=False, file_path="final_portfolio_values.xlsx"):
     # Reset index to convert the date index to a column
     portfolio_values_df = portfolio_values_df.reset_index().rename(columns={'index': 'Date'})
 
@@ -588,7 +588,15 @@ def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df):
     plt.tight_layout()
     plt.show()
 
+    # Save to Excel file if requested
+    if save_to_file:
+        combined_df.to_excel(file_path, index=False)
+        print(f"Dataframe saved to {file_path}")
+
     return combined_df
+
+# To call the function and save to an Excel file, you would use:
+# final_df = combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, save_to_file=True, file_path="your_desired_file_path.xlsx")
 
 # You would call this function with your dataframes like this:
 # final_df = combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df)
