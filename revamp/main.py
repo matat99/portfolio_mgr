@@ -4,6 +4,7 @@ from utilities import load_dict_from_json
 import openpyxl
 import json
 import pickle
+import matplotlib.pyplot as plt
 import xlsxwriter
 from data_retrieval import (
     calculate_overall_performance,
@@ -15,7 +16,8 @@ from data_retrieval import (
     load_exchange_rates,
     calculate_daily_portfolio_values,
     calculate_daily_dividends,
-    calculate_daily_cash_position
+    calculate_daily_cash_position,
+    combine_and_plot_data
 )
 from data_download import (
     download_data_for_tickers,
@@ -126,13 +128,13 @@ if __name__ == "__main__":
 ## dev
 
 
-# divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
+divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
 # print(divi)
 
 diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
-print(diva)
+# print(diva)
 
 
-# div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
+div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
 # print(div)
-
+fin = combine_and_plot_data(div, divi, diva, save_to_file=True)
