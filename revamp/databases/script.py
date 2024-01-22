@@ -1,5 +1,3 @@
-#script.py
-
 import requests
 import pickle
 import os
@@ -10,8 +8,8 @@ def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days) + 1):
         yield start_date + timedelta(n)
 
-def fetch_and_save_exchange_rates(api_key, base_currency, file_path):
-    api_url = "http://api.exchangeratesapi.io/v1/"
+def fetch_and_save_exchange_rates(base_currency, file_path):
+    api_url = "https://theforexapi.com/api/"
     exchange_rates = {}
     today = datetime.now().date()
 
@@ -31,10 +29,12 @@ def fetch_and_save_exchange_rates(api_key, base_currency, file_path):
     # Determine the start date for fetching data
     start_date = last_date_fetched + timedelta(days=1) if last_date_fetched else datetime.today().date()
 
+    count = 0 
     for single_date in daterange(start_date, today):
+        count += 1
         formatted_date = single_date.strftime("%Y-%m-%d")
-        response = requests.get(f"{api_url}{formatted_date}?access_key={api_key}&base={base_currency}")
-
+        response = requests.get(f"{api_url}{formatted_date}/?base={base_currency}")
+        print(count)
         if response.status_code == 200:
             data = response.json()
             exchange_rates[formatted_date] = data.get("rates", {})
@@ -48,9 +48,7 @@ def fetch_and_save_exchange_rates(api_key, base_currency, file_path):
         time.sleep(1)  # Wait for 1 second before the next request
 
 # Example usage
-api_key = "42c83d3d0b0e24c532ce1cd511d95724"  # Replace with your actual API key
 base = "EUR"
 file_path = "exchange_rates.pkl"
 
-fetch_and_save_exchange_rates(api_key, base, file_path)
-
+fetch_and_save_exchange_rates(base, file_path)
