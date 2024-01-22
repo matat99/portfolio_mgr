@@ -11,7 +11,6 @@ from data_retrieval import (
     weekly_performance,
     calculate_position_values_with_currency_adjustment,
     calculate_total_dividends,
-    calculate_cash_position,
     convert_to_gbp,
     load_exchange_rates,
     calculate_daily_portfolio_values,
@@ -51,7 +50,8 @@ if __name__ == "__main__":
     current_tickers = load_dict_from_json(args.tickers)
 
     # Download or load the data based on the argument provided
-    downloaded_fx = get_eur_exchange_rates(api_key) if args.download else load_saved_exchange_rates()
+    downloaded_fx = load_saved_exchange_rates()
+    #downloaded_fx = get_eur_exchange_rates(api_key) if args.download else load_saved_exchange_rates()
     downloaded_data = download_data_for_tickers(transaction_data) if args.download else load_saved_data()
 
     if args.weekly_report:
@@ -127,14 +127,19 @@ if __name__ == "__main__":
 
 ## dev
 
+one = calculate_total_dividends(transaction_data, downloaded_data, downloaded_fx)
+two = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
+print(one)
+print("========================")
+print(two)
 
-divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
-# print(divi)
+# divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
+# # print(divi)
 
-diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
-# print(diva)
+# diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
+# # print(diva)
 
 
-div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
-# print(div)
-fin = combine_and_plot_data(div, divi, diva, save_to_file=True)
+# div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
+# # print(div)
+# fin = combine_and_plot_data(div, divi, diva, save_to_file=True)

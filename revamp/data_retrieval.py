@@ -25,7 +25,8 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
     total_portfolio_value = 0
 
     # Fetch EUR exchange rates to other major currencies
-    eur_rates = fx_rates
+    latest_date = max(fx_rates.keys())
+    eur_rates = eur_rates = fx_rates[latest_date]
 
     currency_mapping = {
         '': 'USD',     # Default to USD for NASDAQ and similar
@@ -74,6 +75,8 @@ def calculate_position_values_with_currency_adjustment(transactions_dict, curren
             position_values[name] = current_value_in_gbp
             total_portfolio_value += current_value_in_gbp
 
+            latest_date = max(fx_rates.keys())
+            print(latest_date)
         except Exception as e:
             position_values[name] = f"Error: {e}"
 
@@ -188,7 +191,7 @@ def calculate_overall_performance(transactions_dict, data_dict, name_to_ticker_m
     # Return the DataFrame
     return df
 
-
+## sums up all the dividends since the start of the SMIF. Not daily just a sum
 def calculate_total_dividends(transactions_dict, historical_data, fx_rates):
     """
     Calculate the total dividends received from each position in GBP,
@@ -294,41 +297,6 @@ def convert_to_gbp(amount, currency, date, exchange_rates):
     eur_to_gbp_rate = exchange_rates[date].get('GBP', 1)
     return amount_in_eur * eur_to_gbp_rate
 
-
-def calculate_cash_position(transactions_dict, exchange_rates_file, historical_data, fx_rates):
-    cash_position = 10000
-    exchange_rates = load_exchange_rates(exchange_rates_file)
-    currency_mapping = {
-        '': 'USD',     # Default to USD for NASDAQ and similar
-        '.L': 'GBP',
-        '.DE': 'EUR',
-        '.PA': 'EUR',
-        '.TO': 'CAD',   # Toronto Stock Exchange
-        '.F': 'EUR'
-    }
-
-    for ticker, transactions in transactions_dict.items():
-        suffix = ticker.split('.')[-1] if '.' in ticker else ''
-        currency = currency_mapping.get('.' + suffix, 'USD')
-
-        for transaction in transactions:
-            # Use historical_data for share prices
-            share_price = historical_data[ticker]['Close'].loc[transaction['date']]
-            transaction_amount_gbp = convert_to_gbp(transaction['shares'] * share_price, currency, transaction['date'], exchange_rates)
-            print(transaction_amount_gbp)
-            print(transaction)
-            
-            # Subtract the transaction amount (buying subtracts, selling adds due to negative shares) 
-            cash_position -= transaction_amount_gbp
-
-    total_dividends_gbp = calculate_total_dividends(transactions_dict, historical_data, fx_rates)[1]
-    print(total_dividends_gbp)
-    cash_position += total_dividends_gbp
-
-    return cash_position
-
-
-import pandas as pd
 
 def calculate_daily_portfolio_values(transactions, historical_stock_data, exchange_rates):
     currency_mapping = {
@@ -461,10 +429,6 @@ def calculate_daily_dividends(transactions, historical_stock_data, exchange_rate
 
     return dividend_values
 
-# Rest of the functions remain the same
-
-
-
 
 def calculate_total_shares_held(transactions, date):
     total_shares = 0
@@ -473,6 +437,7 @@ def calculate_total_shares_held(transactions, date):
         if transaction_date <= date:
             total_shares += transaction['shares']
     return total_shares
+
 
 def convert_dividend_to_gbp(amount, currency, date, exchange_rates):
     if currency == 'GBP':
@@ -552,7 +517,7 @@ def convert_to_gbp_cash(amount, currency, date, exchange_rates):
     return amount_in_eur * eur_to_gbp_rate
 
 
-import matplotlib.pyplot as plt
+
 
 def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, save_to_file=False, file_path="final_portfolio_values.xlsx"):
     # Reset index to convert the date index to a column
