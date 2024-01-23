@@ -2,12 +2,10 @@
 		"BLK":[
 			{"date":"2020-12-30", "shares":2}
 		],
-		"AMZN":[],
 		"BAX":[
 			{"date":"2018-04-11", "shares":17},
 			{"date":"2020-06-16", "shares":-9, "sold": false}
 		],
-		"CMCSA":[],
 		"COLD":[
 			{"date":"2020-06-17", "shares":9}
 		],
@@ -27,7 +25,6 @@
 		"GAW.L":[
 			{"date":"2021-10-13", "shares":0.06}
 		],
-		"GOOG":[],
 		"4I7.F":[
 			{"date":"2020-12-30", "shares":12}
 		],
@@ -38,7 +35,6 @@
 		"LLOY.L":[
 			{"date":"2017-12-18", "shares":15.56}
 		],
-		"MC.PA":[],
 		"MELI":[
 			{"date":"2021-02-17", "shares":1}
 		],
@@ -48,14 +44,12 @@
 		"PFE":[
 			{"date":"2019-02-06", "shares":22}
 		],
-		"SONY":[],
 		"SQ":[
 			{"date":"2021-10-13", "shares":2}
 		],
 		"TTE.PA":[
 			{"date":"2017-12-18", "shares":11}
 		],
-		"MRK.DE":[],
 		"RIO":[
 			{"date":"2019-02-06", "shares":17},
 			{"date":"2020-06-17", "shares":-17, "sold": true}
