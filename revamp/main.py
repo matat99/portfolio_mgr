@@ -16,7 +16,8 @@ from data_retrieval import (
     calculate_daily_portfolio_values,
     calculate_daily_dividends,
     calculate_daily_cash_position,
-    combine_and_plot_data
+    combine_and_plot_data,
+    combine_cash_and_dividends
 )
 from data_download import (
     download_data_for_tickers,
@@ -126,20 +127,14 @@ if __name__ == "__main__":
 
 
 ## dev
-
-one = calculate_total_dividends(transaction_data, downloaded_data, downloaded_fx)
-two = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
-print(one)
-print("========================")
-print(two)
-
-# divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
+divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
 # # print(divi)
 
-# diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
+diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
 # # print(diva)
 
 
-# div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
+
+div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
 # # print(div)
-# fin = combine_and_plot_data(div, divi, diva, save_to_file=True)
+fin = combine_and_plot_data(div, divi, diva, save_to_file=True)
