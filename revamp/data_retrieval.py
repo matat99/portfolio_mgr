@@ -453,11 +453,6 @@ def convert_dividend_to_gbp(amount, currency, date, exchange_rates):
     eur_to_gbp_rate = exchange_rates[date.strftime("%Y-%m-%d")].get('GBP', 1)
     return amount_in_eur * eur_to_gbp_rate
 
-# Example usage
-# Load your data (transaction_data, historical_stock_data, exchange_rates, currency_mapping)
-# daily_dividends = calculate_daily_dividends(transaction_data, historical_stock_data, exchange_rates, currency_mapping)
-
-
 
 def calculate_daily_cash_position(transactions_dict, exchange_rates, historical_data):
     currency_mapping = {
@@ -498,6 +493,7 @@ def calculate_daily_cash_position(transactions_dict, exchange_rates, historical_
 
     return daily_cash_positions
 
+
 def combine_cash_and_dividends(cash_position_df, dividends_df):
     # Merge the two dataframes on the 'Date' column
     combined_df = pd.merge(cash_position_df, dividends_df, on='Date', how='left')
@@ -534,8 +530,6 @@ def convert_to_gbp_cash(amount, currency, date, exchange_rates):
     return amount_in_eur * eur_to_gbp_rate
 
 
-
-
 def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, save_to_file=False, file_path="total_portfolio_daily_dump.xlsx"):
     # Reset index to convert the date index to a column
     portfolio_values_df = portfolio_values_df.reset_index().rename(columns={'index': 'Date'})
@@ -569,11 +563,6 @@ def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, s
 
     return combined_df
 
-# To call the function and save to an Excel file, you would use:
-# final_df = combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, save_to_file=True, file_path="your_desired_file_path.xlsx")
-
-# You would call this function with your dataframes like this:
-# final_df = combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df)
 
 
 
