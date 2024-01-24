@@ -28,7 +28,8 @@ pip install -r requirements.txt
 
 ## To Do
 - [x] **fill the spreadsheet with historical data**
-- [ ] Function for cash position with dividends.
+- [/] Function for cash position with dividends.
+- [ ] Maybe like a notification or something saying the daily change and if we got any dividend yesterday. Maybe just a txt file that's rclone'd into the google drive
 - [ ] Documentation
 - [ ] Generate and document quarterly performance data.
 - [ ] Generate and document year-over-year (YoY) performance data, including data tables and graphs.
