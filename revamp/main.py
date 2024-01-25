@@ -16,6 +16,7 @@ from data_retrieval import (
     calculate_daily_portfolio_values,
     calculate_daily_dividends,
     calculate_daily_cash_position,
+    calculate_cash_position,
     combine_and_plot_data,
     combine_cash_and_dividends
 )

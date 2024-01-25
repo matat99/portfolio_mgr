@@ -454,6 +454,39 @@ def convert_dividend_to_gbp(amount, currency, date, exchange_rates):
     return amount_in_eur * eur_to_gbp_rate
 
 
+def calculate_cash_position(transactions_dict, exchange_rates_file, historical_data, fx_rates):
+    cash_position = 10000
+    exchange_rates = load_exchange_rates(exchange_rates_file)
+    currency_mapping = {
+        '': 'USD',     # Default to USD for NASDAQ and similar
+        '.L': 'GBP',
+        '.DE': 'EUR',
+        '.PA': 'EUR',
+        '.TO': 'CAD',   # Toronto Stock Exchange
+        '.F': 'EUR'
+    }
+
+    for ticker, transactions in transactions_dict.items():
+        suffix = ticker.split('.')[-1] if '.' in ticker else ''
+        currency = currency_mapping.get('.' + suffix, 'USD')
+
+        for transaction in transactions:
+            # Use historical_data for share prices
+            share_price = historical_data[ticker]['Close'].loc[transaction['date']]
+            transaction_amount_gbp = convert_to_gbp(transaction['shares'] * share_price, currency, transaction['date'], exchange_rates)
+            print(transaction_amount_gbp)
+            print(transaction)
+            
+            # Subtract the transaction amount (buying subtracts, selling adds due to negative shares) 
+            cash_position -= transaction_amount_gbp
+
+    total_dividends_gbp = calculate_total_dividends(transactions_dict, historical_data, fx_rates)[1]
+    print(total_dividends_gbp)
+    cash_position += total_dividends_gbp
+
+    return cash_position
+
+
 def calculate_daily_cash_position(transactions_dict, exchange_rates, historical_data):
     currency_mapping = {
         '': 'USD',     # Default to USD for NASDAQ and similar
