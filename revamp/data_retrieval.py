@@ -571,8 +571,18 @@ def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, s
     combined_df = portfolio_values_df.merge(cash_position_df, on='Date')
     combined_df = combined_df.merge(dividends_df, on='Date')
 
+    # Replace NaN values in Dividends column with 0 (for days without dividends)
+    combined_df['Dividends GBP'].fillna(0, inplace=True)
+
+    # Calculate cash position without dividends (original cash position)
+    combined_df['Cash Position without Dividends GBP'] = combined_df['Cash Position GBP']
+
+    # Calculate cash position with dividends
+    combined_df['Cash Position with Dividends GBP'] = combined_df['Cash Position GBP'] + combined_df['Dividends GBP'].cumsum()
+
     # Calculate total portfolio value with and without dividends
-    combined_df['Total Portfolio Value without Dividends'] = combined_df['Total Portfolio Value'] + combined_df['Cash Position GBP']
+    combined_df['Total Portfolio Value without Dividends'] = combined_df['Total Portfolio Value'] + combined_df['Cash Position without Dividends GBP']
+    combined_df['Total Portfolio Value with Dividends'] = combined_df['Total Portfolio Value'] + combined_df['Cash Position with Dividends GBP']
 
     # Plotting
     plt.figure(figsize=(15, 7))
@@ -585,6 +595,13 @@ def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, s
     plt.ylabel('Value in GBP')
     plt.legend()
 
+    # Plot for total portfolio value with dividends
+    plt.subplot(1, 2, 2)
+    plt.plot(combined_df['Date'], combined_df['Total Portfolio Value with Dividends'], label='With Dividends', color='green')
+    plt.title('Total Portfolio Value Over Time With Dividends')
+    plt.xlabel('Date')
+    plt.ylabel('Value in GBP')
+    plt.legend()
 
     plt.tight_layout()
     plt.show()
@@ -595,6 +612,7 @@ def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, s
         print(f"Dataframe saved to {file_path}")
 
     return combined_df
+
 
 
 
