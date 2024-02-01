@@ -129,13 +129,13 @@ if __name__ == "__main__":
 
 ## dev
 divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
-# # print(divi)
+print(divi)
 
 diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
-# # print(diva)
+print(diva)
 
 
 
 div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
-# # print(div)
+# # # print(div)
 fin = combine_and_plot_data(div, divi, diva, save_to_file=True)
