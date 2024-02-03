@@ -563,6 +563,9 @@ def convert_to_gbp_cash(amount, currency, date, exchange_rates):
     return amount_in_eur * eur_to_gbp_rate
 
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
 def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, save_to_file=False, file_path="total_portfolio_daily_dump.xlsx"):
     # Reset index to convert the date index to a column
     portfolio_values_df = portfolio_values_df.reset_index().rename(columns={'index': 'Date'})
@@ -608,8 +611,11 @@ def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, s
 
     # Save to Excel file if requested
     if save_to_file:
-        combined_df.to_excel(file_path, index=False)
-        print(f"Dataframe saved to {file_path}")
+        with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+            combined_df.to_excel(writer, sheet_name='Full Data', index=False)
+            summary_df = combined_df[['Date', 'Total Portfolio Value with Dividends', 'Total Portfolio Value without Dividends']]
+            summary_df.to_excel(writer, sheet_name='Summary', index=False)
+        print(f"Dataframe saved to {file_path} with two sheets: 'Full Data' and 'Summary'")
 
     return combined_df
 
