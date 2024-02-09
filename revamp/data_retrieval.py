@@ -576,7 +576,7 @@ def combine_and_plot_data(portfolio_values_df, cash_position_df, dividends_df, s
 
     # Replace NaN values in Dividends column with 0 (for days without dividends)
     combined_df['Dividends GBP'].fillna(0, inplace=True)
-z`
+
     # Calculate cash position without dividends (original cash position)
     combined_df['Cash Position without Dividends GBP'] = combined_df['Cash Position GBP']
 
