@@ -27,15 +27,6 @@ cd stirling-portfolio-manager
 pip install -r requirements.txt
 
 ## To Do
-- [x] **fill the spreadsheet with historical data**
-- [/] Function for cash position with dividends.
-- [ ] Maybe like a notification or something saying the daily change and if we got any dividend yesterday. Maybe just a txt file that's rclone'd into the google drive
-- [ ] Documentation
-- [ ] Generate and document quarterly performance data.
-- [ ] Generate and document year-over-year (YoY) performance data, including data tables and graphs.
-- [ ] Generate yearly portfolio performance data.
-- [ ] Each period summary will have it's own sheet.
-- [x] **Track the cash position of the portfolio.**
-- [x] Manage dividend additions and updates in the portfolio.
-- [x] Decide on the amount of shares for each position and update the transactions file.
-
+- [ ] Look into how weekly data is calculated
+- [ ] Revamp data download probably use the ECB rss feed
+- [ ] Make the README actually useful
