@@ -22,10 +22,7 @@ from data_retrieval import (
     load_exchange_rates,
     weekly_performance
 )
-from utilities import load_dict_from_json
 
-# Hardcoded API key for development purposes
-api_key = "42c83d3d0b0e24c532ce1cd511d95724"
 
 # Create the parser
 parser = argparse.ArgumentParser(description='Generate performance reports for the portfolio.')
@@ -33,11 +30,14 @@ parser.add_argument('-download', action='store_true', help='Download new data in
 parser.add_argument('--weekly-report', action='store_true', help='Generate weekly performance report and save to Excel')
 parser.add_argument('--transactions', default='../transactions.json', help='The path to the transactions JSON file')
 parser.add_argument('--tickers', default='../current_tickers.json', help='The path to the current tickers JSON file')
-parser.add_argument('--excel', action='store_true', help='Development stuffz')
 parser.add_argument('--daily-dump', action='store_true', help='Generate daily dump and save to Excel')
 
 # Parse the arguments
 args = parser.parse_args()
+
+def load_dict_from_json(filename):
+    with open(filename, 'r') as file:
+        return json.load(file)
 
 if __name__ == "__main__":
     # Check if no flags are set
@@ -75,7 +75,7 @@ if __name__ == "__main__":
             }, inplace=True)
 
             # Calculate the cash position
-            cash_position = calculate_cash_position(transaction_data, "./databases/exchange_rates.pkl", downloaded_data, downloaded_fx)
+            cash_position = calculate_cash_position(transaction_data, "./databases/ecb_daily.pkl", downloaded_data, downloaded_fx)
 
             # Calculate total div received
             tot_div = calculate_total_dividends(transaction_data, downloaded_data, downloaded_fx)[1]
