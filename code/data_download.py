@@ -1,9 +1,10 @@
-import yfinance as yf
-import time
+import os
 import pandas as pd
 import pickle
 import requests
-
+import time
+from datetime import datetime, timedelta
+import yfinance as yf
 
 def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True, file_path="./databases/downloaded_data.pkl"):
     data_dict = {}
@@ -14,14 +15,14 @@ def download_data_for_tickers(tickers, retries=3, delay=5, save_to_file=True, fi
             try:
                 # Download the historical market data
                 market_data = yf.download(ticker, start=start_date, progress=False)
-                
+
                 # Remove timezone information from market data
                 market_data.index = market_data.index.tz_localize(None)
 
                 # Use yf.Ticker to get the dividend data
                 ticker_data = yf.Ticker(ticker)
                 dividend_data = ticker_data.dividends
-                
+
                 # Remove timezone information from div data
                 dividend_data.index = dividend_data.index.tz_localize(None)
 
@@ -74,17 +75,10 @@ def get_eur_exchange_rates(api_key, save_to_file=True, file_path="./databases/ex
     return rates
 
 
-def load_saved_exchange_rates(file_name="./databases/exchange_rates.pkl"):
+def load_saved_exchange_rates(file_name="./databases/ecb_daily.pkl"):
     with open(file_name, "rb") as f:
         data_dict = pickle.load(f)
     return data_dict
-
-
-import requests
-import pickle
-import os
-import time
-from datetime import datetime, timedelta
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days) + 1):
