@@ -20,13 +20,11 @@ Tech Stack
 
 ## Installation and Setup
 
-bash
-
+```bash
 git clone https://github.com/matat99/stirling-portfolio-manager.git
 cd stirling-portfolio-manager
 pip install -r requirements.txt
+```
 
 ## To Do
-- [ ] Look into how weekly data is calculated
-- [ ] Revamp data download probably use the ECB rss feed
 - [ ] Make the README actually useful

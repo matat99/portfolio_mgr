@@ -1,11 +1,10 @@
 import csv
 import pickle
+from datetime import datetime
 
-# Function to convert CSV data to a dictionary
 def convert_csv_to_dict(csv_file_path):
-    keys = ['USD', 'JPY', 'BGN', 'CYP', 'CZK', 'DKK', 'EEK', 'GBP', 'HUF', 'LTL', 'LVL', 'MTL', 'PLN', 'ROL', 'RON',
-            'SEK', 'SIT', 'SKK', 'CHF', 'ISK', 'NOK', 'HRK', 'RUB', 'TRL', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD',
-            'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR']
+    keys = ['USD', 'JPY', 'BGN', 'CZK', 'DKK', 'GBP', 'HUF', 'PLN', 'RON', 'SEK', 'CHF', 'ISK', 'NOK', 'TRY', 'AUD',
+            'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR']
 
     result_dict = {}
 
@@ -13,7 +12,8 @@ def convert_csv_to_dict(csv_file_path):
         csv_reader = csv.reader(file)
         header = next(csv_reader)  # Skip the header
         for row in csv_reader:
-            date = row[0]
+            # Convert date to 'YYYY-MM-DD' format
+            date = datetime.strptime(row[0], '%d %B %Y').strftime('%Y-%m-%d')
             values = row[1:]
             currency_data = {keys[i]: float(values[i]) for i in range(len(keys)) if values[i] != 'N/A'}
             result_dict[date] = currency_data
@@ -28,9 +28,9 @@ except FileNotFoundError:
     existing_data = {}  # If the file doesn't exist, start with an empty dictionary
 
 # Convert new CSV data to a dictionary
-csv_file_path = 'path_to_your_csv_file.csv'  # Replace with your actual CSV file path
+csv_file_path = 'eurofxref.csv'  # Replace with your actual CSV file path
 new_data = convert_csv_to_dict(csv_file_path)
-
+print(new_data)
 # Update existing data with new data
 existing_data.update(new_data)
 
