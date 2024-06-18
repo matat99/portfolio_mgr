@@ -2,7 +2,6 @@ import yfinance as yf
 import pandas as pd
 from pandas.tseries.offsets import DateOffset
 import pickle
-import matplotlib.pyplot as plt
 
 currency_mapping = {
     '': 'USD',     # Default to USD for NASDAQ and similar
@@ -163,7 +162,6 @@ def calculate_total_dividends(transactions_dict, historical_data, fx_rates):
 def convert_dividend_to_gbp(amount, currency, date, fx_rates):
     """
     Convert an amount from a given currency to GBP using EUR as a pivot.
-
     :param amount: Amount in the original currency.
     :param currency: Original currency of the amount.
     :param date: Date of the conversion for fetching the appropriate exchange rate.
@@ -358,3 +356,34 @@ def convert_to_gbp_cash(amount, currency, date, exchange_rates):
     amount_in_eur = amount / to_eur_rate
     eur_to_gbp_rate = exchange_rates.get(formatted_date, {}).get('GBP', 1)
     return amount_in_eur * eur_to_gbp_rate
+
+
+def combine_and_save_data(portfolio_values_df, cash_position_df, dividends_df, file_path="total_portfolio_daily_dump.xlsx"):
+    # Reset index to convert the date index to a column
+    portfolio_values_df = portfolio_values_df.reset_index().rename(columns={'index': 'Date'})
+
+    # Combine the dataframes
+    combined_df = portfolio_values_df.merge(cash_position_df, on='Date')
+    combined_df = combined_df.merge(dividends_df, on='Date')
+
+    # Replace NaN values in Dividends column with 0 (for days without dividends)
+    combined_df['Dividends GBP'].fillna(0, inplace=True)
+
+    # Calculate cash position without dividends (original cash position)
+    combined_df['Cash Position without Dividends GBP'] = combined_df['Cash Position GBP']
+
+    # Calculate cash position with dividends
+    combined_df['Cash Position with Dividends GBP'] = combined_df['Cash Position GBP'] + combined_df['Dividends GBP'].cumsum()
+
+    # Calculate total portfolio value with and without dividends
+    combined_df['Total Portfolio Value without Dividends'] = combined_df['Total Portfolio Value'] + combined_df['Cash Position without Dividends GBP']
+    combined_df['Total Portfolio Value with Dividends'] = combined_df['Total Portfolio Value'] + combined_df['Cash Position with Dividends GBP']
+
+    # Save to Excel file
+    with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+        combined_df.to_excel(writer, sheet_name='Full Data', index=False)
+        summary_df = combined_df[['Date', 'Total Portfolio Value with Dividends', 'Total Portfolio Value without Dividends']]
+        summary_df.to_excel(writer, sheet_name='Summary', index=False)
+    print(f"Dataframe saved to {file_path} with two sheets: 'Full Data' and 'Summary'")
+
+    return combined_df

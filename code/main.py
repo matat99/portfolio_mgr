@@ -1,32 +1,32 @@
 import argparse
-import pandas as pd
-from utilities import load_dict_from_json
-import openpyxl
 import json
+import openpyxl
+import pandas as pd
 import pickle
-import matplotlib.pyplot as plt
 import xlsxwriter
+from data_download import (
+    daterange,
+    download_data_for_tickers,
+    fetch_and_save_exchange_rates,
+    get_eur_exchange_rates,
+    load_saved_data,
+    load_saved_exchange_rates
+)
 from data_retrieval import (
+    calculate_cash_position,
+    calculate_daily_cash_position,
+    calculate_daily_dividends,
+    calculate_daily_portfolio_values,
     calculate_overall_performance,
-    weekly_performance,
     calculate_position_values_with_currency_adjustment,
     calculate_total_dividends,
+    combine_cash_and_dividends,
     convert_to_gbp,
     load_exchange_rates,
-    calculate_daily_portfolio_values,
-    calculate_daily_dividends,
-    calculate_daily_cash_position,
-    calculate_cash_position,
-    combine_cash_and_dividends
+    weekly_performance,
+    combine_and_save_data
 )
-from data_download import (
-    download_data_for_tickers,
-    load_saved_data,
-    get_eur_exchange_rates,
-    load_saved_exchange_rates,
-    fetch_and_save_exchange_rates,
-    daterange
-)
+from utilities import load_dict_from_json
 
 # Hardcoded API key for development purposes
 api_key = "42c83d3d0b0e24c532ce1cd511d95724"
@@ -124,13 +124,14 @@ if __name__ == "__main__":
         print("Weekly report generated and saved to 'weekly_report.xlsx'")
 
 
+# Calculate daily cash position
 
+daily_cash_position = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
+print(daily_cash_position)
 
-## dev
-divi = calculate_daily_cash_position(transaction_data, downloaded_fx, downloaded_data)
-print(divi)
+daily_dividends = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
+print(daily_dividends)
 
-diva = calculate_daily_dividends(transaction_data, downloaded_data, downloaded_fx)
-print(diva)
+daily_portfolio_values = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
 
-div = calculate_daily_portfolio_values(transaction_data, downloaded_data, downloaded_fx)
+fin = combine_and_save_data(daily_portfolio_values, daily_cash_position, daily_dividends)
