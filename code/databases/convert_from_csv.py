@@ -1,8 +1,8 @@
 import csv
 import pickle
 
+# Function to convert CSV data to a dictionary
 def convert_csv_to_dict(csv_file_path):
-    # Define the keys in the order they appear in the CSV, excluding 'Date'
     keys = ['USD', 'JPY', 'BGN', 'CYP', 'CZK', 'DKK', 'EEK', 'GBP', 'HUF', 'LTL', 'LVL', 'MTL', 'PLN', 'ROL', 'RON',
             'SEK', 'SIT', 'SKK', 'CHF', 'ISK', 'NOK', 'HRK', 'RUB', 'TRL', 'TRY', 'AUD', 'BRL', 'CAD', 'CNY', 'HKD',
             'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR']
@@ -20,8 +20,20 @@ def convert_csv_to_dict(csv_file_path):
 
     return result_dict
 
-# Example usage
-csv_file_path = 'eurofxref-hist.csv'
-result = convert_csv_to_dict(csv_file_path)
-with open('ecb_daily.pkl', 'wb') as pkl_file:
-    pickle.dump(result, pkl_file)
+# Load existing data
+try:
+    with open('ecb_daily.pkl', 'rb') as file:
+        existing_data = pickle.load(file)
+except FileNotFoundError:
+    existing_data = {}  # If the file doesn't exist, start with an empty dictionary
+
+# Convert new CSV data to a dictionary
+csv_file_path = 'path_to_your_csv_file.csv'  # Replace with your actual CSV file path
+new_data = convert_csv_to_dict(csv_file_path)
+
+# Update existing data with new data
+existing_data.update(new_data)
+
+# Save the updated data back to the .pkl file
+with open('ecb_daily.pkl', 'wb') as file:
+    pickle.dump(existing_data, file)

@@ -5,10 +5,7 @@ import pandas as pd
 import pickle
 import xlsxwriter
 from data_download import (
-    daterange,
     download_data_for_tickers,
-    fetch_and_save_exchange_rates,
-    get_eur_exchange_rates,
     load_saved_data,
     load_saved_exchange_rates
 )
