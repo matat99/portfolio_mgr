@@ -239,14 +239,20 @@ def calculate_stock_value(ticker, transactions, historical_data, exchange_rates,
         close_price = historical_data.loc[date, 'Close']
         stock_value = total_shares * close_price
 
-        if currency != 'GBP':
-            to_eur_rate = exchange_rates[date.strftime("%Y-%m-%d")].get(currency, 1)
-            amount_in_eur = stock_value / to_eur_rate
-            eur_to_gbp_rate = exchange_rates[date.strftime("%Y-%m-%d")].get('GBP', 1)
-            return amount_in_eur * eur_to_gbp_rate
+        date_str = date.strftime("%Y-%m-%d")
+        if date_str in exchange_rates:
+            if currency != 'GBP':
+                to_eur_rate = exchange_rates[date_str].get(currency, 1)
+                amount_in_eur = stock_value / to_eur_rate
+                eur_to_gbp_rate = exchange_rates[date_str].get('GBP', 1)
+                return amount_in_eur * eur_to_gbp_rate
+            else:
+                return stock_value
         else:
-            return stock_value
+            # Skip the calculation if exchange rates are not available for the given date
+            return 0
     else:
+        # Skip the calculation if historical data is not available for the given date
         return 0
 
 
@@ -356,7 +362,6 @@ def convert_to_gbp_cash(amount, currency, date, exchange_rates):
     amount_in_eur = amount / to_eur_rate
     eur_to_gbp_rate = exchange_rates.get(formatted_date, {}).get('GBP', 1)
     return amount_in_eur * eur_to_gbp_rate
-
 
 def combine_and_save_data(portfolio_values_df, cash_position_df, dividends_df, file_path="total_portfolio_daily_dump.xlsx"):
     # Reset index to convert the date index to a column
