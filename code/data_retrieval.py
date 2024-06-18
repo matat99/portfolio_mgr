@@ -363,16 +363,22 @@ def convert_to_gbp_cash(amount, currency, date, exchange_rates):
     eur_to_gbp_rate = exchange_rates.get(formatted_date, {}).get('GBP', 1)
     return amount_in_eur * eur_to_gbp_rate
 
+
 def combine_and_save_data(portfolio_values_df, cash_position_df, dividends_df, file_path="total_portfolio_daily_dump.xlsx"):
     # Reset index to convert the date index to a column
     portfolio_values_df = portfolio_values_df.reset_index().rename(columns={'index': 'Date'})
+
+    # Remove rows where all entries (excluding 'Date') are zero
+    portfolio_values_df = portfolio_values_df.loc[(portfolio_values_df.drop(columns=['Date']) != 0).any(axis=1)]
+    print(portfolio_values_df.tail())
+
 
     # Combine the dataframes
     combined_df = portfolio_values_df.merge(cash_position_df, on='Date')
     combined_df = combined_df.merge(dividends_df, on='Date')
 
     # Replace NaN values in Dividends column with 0 (for days without dividends)
-    combined_df['Dividends GBP'].fillna(0, inplace=True)
+    combined_df['Dividends GBP'] = combined_df['Dividends GBP'].fillna(0)
 
     # Calculate cash position without dividends (original cash position)
     combined_df['Cash Position without Dividends GBP'] = combined_df['Cash Position GBP']
