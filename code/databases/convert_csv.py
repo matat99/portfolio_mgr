@@ -1,10 +1,11 @@
 import csv
 import pickle
+import os
 from datetime import datetime
 
 def convert_csv_to_dict(csv_file_path):
-    keys = ['USD', 'JPY', 'BGN', 'CZK', 'DKK', 'GBP', 'HUF', 'PLN', 'RON', 'SEK', 'CHF', 'ISK', 'NOK', 'TRY', 'AUD',
-            'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB', 'ZAR']
+    keys = ['USD', 'JPY', 'BGN', 'CZK', 'DKK', 'GBP', 'HUF', 'PLN', 'RON', 'SEK', 'CHF', 'ISK', 'NOK', 'TRY',
+            'BRL', 'CAD', 'CNY', 'HKD', 'IDR', 'ILS', 'INR', 'KRW', 'MXN', 'MYR', 'NZD', 'PHP', 'SGD', 'THB']
 
     result_dict = {}
 
@@ -20,6 +21,12 @@ def convert_csv_to_dict(csv_file_path):
 
     return result_dict
 
+# Absolute path to the script's directory
+SCRIPT_DIR = "/home/matat99/portfolio_mgr/code/databases"
+
+# Change to the script's directory
+os.chdir(SCRIPT_DIR)
+
 # Load existing data
 try:
     with open('ecb_daily.pkl', 'rb') as file:
@@ -28,9 +35,10 @@ except FileNotFoundError:
     existing_data = {}  # If the file doesn't exist, start with an empty dictionary
 
 # Convert new CSV data to a dictionary
-csv_file_path = 'eurofxref.csv'  # Replace with your actual CSV file path
+csv_file_path = 'eurofxref.csv'  # The CSV file should be in the same directory
 new_data = convert_csv_to_dict(csv_file_path)
 print(new_data)
+
 # Update existing data with new data
 existing_data.update(new_data)
 
