@@ -1,7 +1,7 @@
 import pickle
 
 # Load the data from the .pkl file
-with open('sorted_ecb_daily.pkl', 'rb') as file:
+with open('ecb_daily.pkl', 'rb') as file:
     data = pickle.load(file)
 
 # Get the last 3 entries from the dictionary
