@@ -22,7 +22,7 @@ def convert_csv_to_dict(csv_file_path):
     return result_dict
 
 # Absolute path to the script's directory
-SCRIPT_DIR = "/home/matat99/portfolio_mgr/code/databases"
+SCRIPT_DIR = "/Users/matat99/Projects/portfolio_mgr/code/databases"
 
 # Change to the script's directory
 os.chdir(SCRIPT_DIR)

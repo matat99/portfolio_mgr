@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Absolute path to the script's directory
-SCRIPT_DIR="/home/matat99/portfolio_mgr/code/databases"
+SCRIPT_DIR="/Users/matat99/Projects/portfolio_mgr/code/databases"
 
 # Change to the script's directory
 cd "$SCRIPT_DIR" || exit
