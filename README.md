@@ -51,3 +51,9 @@ To set up the Portfolio Manager, follow these steps:
 - [ ] Incorporate some modeles
 - [ ] Maybe a UI?
 - [ ] Make the fx data update less tedious.
+- [ ] Clean up unused imports and de-bloat requirements.txt.
+
+
+## Contributors
+
+This Project was created by Maciej Miazek (mam00961@students.stir.ac.uk)
