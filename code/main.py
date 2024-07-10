@@ -4,6 +4,7 @@ import openpyxl
 import pandas as pd
 import pickle
 import xlsxwriter
+from pathlib import Path
 from data_download import (
     download_data_for_tickers,
     load_saved_data,
@@ -28,9 +29,14 @@ from data_retrieval import (
 parser = argparse.ArgumentParser(description='Generate performance reports for the portfolio.')
 parser.add_argument('-download', action='store_true', help='Download new data instead of using saved data')
 parser.add_argument('--weekly-report', action='store_true', help='Generate weekly performance report and save to Excel')
-parser.add_argument('--transactions', default='../transactions.json', help='The path to the transactions JSON file')
-parser.add_argument('--tickers', default='../current_tickers.json', help='The path to the current tickers JSON file')
 parser.add_argument('--daily-dump', action='store_true', help='Generate daily dump and save to Excel')
+
+# Default paths using pathlib
+default_transactions_path = Path('../transactions.json').resolve()
+default_tickers_path = Path('../current_tickers.json').resolve()
+
+parser.add_argument('--transactions', default=str(default_transactions_path), help='The path to the transactions JSON file')
+parser.add_argument('--tickers', default=str(default_tickers_path), help='The path to the current tickers JSON file')
 
 # Parse the arguments
 args = parser.parse_args()
@@ -45,8 +51,8 @@ if __name__ == "__main__":
         print("Please specify an action to perform. Use the -h flag for help.")
     else:
         # Load Transactions and current tickers
-        transaction_data = load_dict_from_json(args.transactions)
-        current_tickers = load_dict_from_json(args.tickers)
+        transaction_data = load_dict_from_json(Path(args.transactions))
+        current_tickers = load_dict_from_json(Path(args.tickers))
 
         # Download or load the data based on the argument provided
         downloaded_fx = load_saved_exchange_rates()
@@ -75,7 +81,7 @@ if __name__ == "__main__":
             }, inplace=True)
 
             # Calculate the cash position
-            cash_position = calculate_cash_position(transaction_data, "./databases/ecb_daily.pkl", downloaded_data, downloaded_fx)
+            cash_position = calculate_cash_position(transaction_data, Path("./databases/ecb_daily.pkl"), downloaded_data, downloaded_fx)
 
             # Calculate total div received
             tot_div = calculate_total_dividends(transaction_data, downloaded_data, downloaded_fx)[1]
