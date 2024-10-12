@@ -45,6 +45,7 @@ To set up the Portfolio Manager, follow these steps:
 
 
 ## To Do
+- [ ] !Clean up the code!
 - [ ] Make the README actually useful
 - [ ] Implement a way to track stock splits
 - [ ] Make this work on Windows

@@ -1,62 +1,35 @@
-	{
-		"BLK":[
-			{"date":"2020-12-30", "shares":2}
-		],
-		"BAX":[
-			{"date":"2018-04-11", "shares":17},
-			{"date":"2020-06-16", "shares":-9, "sold": false}
-		],
-		"COLD":[
-			{"date":"2020-06-17", "shares":9}
-		],
-		"CRM":[
-			{"date":"2018-04-11", "shares":11},
-			{"date":"2020-06-16", "shares":-5, "sold": false}
-		],
-		"DIS":[
-			{"date":"2019-04-17", "shares":7}
-		],
-		"EL":[
-			{"date":"2020-06-17", "shares":3}
-		],
-		"EZJ.L":[
-			{"date":"2018-04-11", "shares":0.75}
-		],
-		"GAW.L":[
-			{"date":"2021-10-13", "shares":0.06}
-		],
-		"4I7.F":[
-			{"date":"2020-12-30", "shares":12}
-		],
-		"IFX.DE":[
-			{"date":"2017-12-18", "shares":54},
-			{"date":"2021-07-16", "shares":-24, "sold": false}
-		],
-		"LLOY.L":[
-			{"date":"2017-12-18", "shares":15.56}
-		],
-		"MELI":[
-			{"date":"2021-02-17", "shares":1} 
-		],
-		"NEE":[
-			{"date":"2019-02-06", "shares":20}
-		],
-		"PFE":[
-			{"date":"2019-02-06", "shares":22}
-		],
-		"SQ":[
-			{"date":"2021-10-13", "shares":2}
-		],
-		"TTE.PA":[
-			{"date":"2017-12-18", "shares":11}
-		],
-		"RIO":[
-			{"date":"2019-02-06", "shares":17},
-			{"date":"2020-06-17", "shares":-17, "sold": true}
-		],
-		"ESGD":[
-			{"date":"2017-12-18", "shares":48},
-			{"date":"2019-01-30", "shares":-48, "sold": true}
-		]
-
-	}
+{
+  "BLK": [{ "date": "2020-12-30", "shares": 2 }],
+  "BAX": [
+    { "date": "2018-04-11", "shares": 17 },
+    { "date": "2020-06-16", "shares": -9, "sold": false }
+  ],
+  "COLD": [{ "date": "2020-06-17", "shares": 9 }],
+  "CRM": [
+    { "date": "2018-04-11", "shares": 11 },
+    { "date": "2020-06-16", "shares": -5, "sold": false }
+  ],
+  "DIS": [{ "date": "2019-04-17", "shares": 7 }],
+  "EL": [{ "date": "2020-06-17", "shares": 3 }],
+  "EZJ.L": [{ "date": "2018-04-11", "shares": 0.75 }],
+  "GAW.L": [{ "date": "2021-10-13", "shares": 0.06 }],
+  "4I7.F": [{ "date": "2020-12-30", "shares": 12 }],
+  "IFX.DE": [
+    { "date": "2017-12-18", "shares": 54 },
+    { "date": "2021-07-16", "shares": -24, "sold": false }
+  ],
+  "LLOY.L": [{ "date": "2017-12-18", "shares": 15.56 }],
+  "MELI": [{ "date": "2021-02-17", "shares": 1 }],
+  "NEE": [{ "date": "2019-02-06", "shares": 20 }],
+  "PFE": [{ "date": "2019-02-06", "shares": 22 }],
+  "SQ": [{ "date": "2021-10-13", "shares": 2 }],
+  "TTE.PA": [{ "date": "2017-12-18", "shares": 11 }],
+  "RIO": [
+    { "date": "2019-02-06", "shares": 17 },
+    { "date": "2020-06-17", "shares": -17, "sold": true }
+  ],
+  "ESGD": [
+    { "date": "2017-12-18", "shares": 48 },
+    { "date": "2019-01-30", "shares": -48, "sold": true }
+  ]
+}
